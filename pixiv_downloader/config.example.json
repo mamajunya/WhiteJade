@@ -1,0 +1,11 @@
+{
+  "refresh_token": "你的refresh_token",
+  "download_dir": "downloads",
+  "default_max_count": 20,
+  "default_max_pages": 3,
+  "skip_r18": false,
+  "min_bookmarks": 0,
+  "sort": "date_desc",
+  "delay_between_downloads": 1.5,
+  "delay_between_pages": 2.0
+}
