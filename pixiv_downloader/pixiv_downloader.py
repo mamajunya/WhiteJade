@@ -477,7 +477,7 @@ class PixivDownloader:
         print(f"  跳过AI作品: {'是' if skip_ai else '否'}")
         print(f"  排序方式: {sort}\n")
         
-        while downloaded_count < max_count and page <= start_page + max_pages - 1:
+        while downloaded_count < max_count:
             illusts = self.search_illustrations(query, page=page, sort=sort)
             
             if not illusts:
