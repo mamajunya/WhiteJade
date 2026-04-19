@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QLabel, QLineEdit, QSpinBox, QCheckBox, QTextEdit,
     QProgressBar, QFileDialog, QMessageBox, QGroupBox,
     QComboBox, QFrame, QScrollArea, QTabWidget, QRadioButton, QButtonGroup,
-    QColorDialog
+    QColorDialog, QSystemTrayIcon
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QProcess
 from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor, QPainterPath
@@ -45,7 +45,7 @@ TRANSLATIONS = {
         "preset_colors": "预设:",
         "language": "语言:",
         "download_dir": "下载目录:",
-        "open_folder": "打开下载目录",
+        "open_folder": "打开",
         "theme_changed": "主题已切换！",
         "language_changed": "语言已切换！\n\n重启应用后生效。",
         # 下载与过滤
@@ -85,6 +85,31 @@ TRANSLATIONS = {
         # 设置
         "about": "关于",
         "about_text": "WhiteJade属于cll计划的主分支之一，\n\n 旨在高效的精选内容,\n\n WhiteJade可以自动拉取pixiv上内容筛选，可以最大限度节约时间并防止眼睛遭到重创，\n\n 注:本软件完全开源免费，如果你在网上购买到的此软件，\n\n 请立刻退款并'问候'对方全家",
+        "developer": "开发: mamajunya",
+        "star_request": "如果喜欢请给点一个 Star ⭐",
+        "change_folder": "更改目录",
+        "select_folder": "选择下载目录",
+        "transfer_data": "转移数据",
+        "transfer_data_msg": "检测到原目录中有数据，是否转移到新目录？",
+        "transfer_failed": "数据转移失败",
+        "folder_changed": "下载目录已更改",
+        "success": "成功",
+        "error": "错误",
+        "warning": "警告",
+        "show_window": "显示窗口",
+        "quit": "退出",
+        "close_window": "关闭窗口",
+        "close_window_msg": "您想要？",
+        "exit_app": "完全退出",
+        "minimize_to_tray": "最小化到托盘",
+        "cancel": "取消",
+        "remember_choice": "记住我的选择",
+        "minimized_to_tray": "已最小化到系统托盘",
+        "close_behavior": "关闭行为:",
+        "ask_on_close": "每次询问",
+        "exit_directly": "直接退出",
+        "minimize_to_tray_option": "最小化到托盘",
+        "close_behavior_changed": "关闭行为已更改",
     },
     "ja_JP": {
         "app_title": "WhiteJade",
@@ -97,7 +122,7 @@ TRANSLATIONS = {
         "preset_colors": "プリセット:",
         "language": "言語:",
         "download_dir": "ダウンロードフォルダ:",
-        "open_folder": "フォルダを開く",
+        "open_folder": "開く",
         "theme_changed": "テーマが変更されました！",
         "language_changed": "言語が変更されました！\n\nアプリを再起動してください。",
         "download_settings": "📥 ダウンロード設定",
@@ -134,6 +159,31 @@ TRANSLATIONS = {
         "get_token": "🔑 Token を取得",
         "about": "について",
         "about_text": "WhiteJadeはcll計画の主要ブランチの一つであり、\n効率的にコンテンツを厳選することを目的としています。\nWhiteJadeはpixiv上のコンテンツを自動で取得・フィルタリングし、\n時間を最大限節約し、目へのダメージを防ぎます。\n注：本ソフトは完全にオープンソースで無料です。\nもし本ソフトをネット上で購入した場合は、\nすぐに返金を要求し、相手の家族に「よろしく」伝えてください。\n証拠は必ず保存しておいてください。",
+        "developer": "開発者: mamajunya",
+        "star_request": "気に入ったら Star ⭐ をお願いします",
+        "change_folder": "フォルダ変更",
+        "select_folder": "ダウンロードフォルダを選択",
+        "transfer_data": "データ転送",
+        "transfer_data_msg": "元のフォルダにデータが検出されました。新しいフォルダに転送しますか？",
+        "transfer_failed": "データ転送に失敗しました",
+        "folder_changed": "ダウンロードフォルダが変更されました",
+        "success": "成功",
+        "error": "エラー",
+        "warning": "警告",
+        "show_window": "ウィンドウを表示",
+        "quit": "終了",
+        "close_window": "ウィンドウを閉じる",
+        "close_window_msg": "どうしますか？",
+        "exit_app": "完全に終了",
+        "minimize_to_tray": "トレイに最小化",
+        "cancel": "キャンセル",
+        "remember_choice": "選択を記憶する",
+        "minimized_to_tray": "システムトレイに最小化されました",
+        "close_behavior": "閉じる動作:",
+        "ask_on_close": "毎回確認",
+        "exit_directly": "直接終了",
+        "minimize_to_tray_option": "トレイに最小化",
+        "close_behavior_changed": "閉じる動作が変更されました",
     },
     "ko_KR": {
         "app_title": "WhiteJade",
@@ -146,7 +196,7 @@ TRANSLATIONS = {
         "preset_colors": "프리셋:",
         "language": "언어:",
         "download_dir": "다운로드 폴더:",
-        "open_folder": "폴더 열기",
+        "open_folder": "열기",
         "theme_changed": "테마가 변경되었습니다！",
         "language_changed": "언어가 변경되었습니다！\n\n앱을 다시 시작하세요。",
         "download_settings": "📥 다운로드 설정",
@@ -183,6 +233,31 @@ TRANSLATIONS = {
         "get_token": "🔑 Token 가져오기",
         "about": "정보",
         "about_text": "WhiteJade는 cll 계획의 주요 브랜치 중 하나로,\n효율적인 콘텐츠 선별을 목표로 합니다.\nWhiteJade는 pixiv의 콘텐츠를 자동으로 가져와 필터링하며,\n시간을 최대한 절약하고 눈에 가해지는 피해를 방지합니다.\n참고: 이 소프트웨어는 완전히 오픈소스이며 무료입니다.\n만약 이 소프트웨어를 인터넷에서 구매하셨다면,\n즉시 환불을 요구하고 상대방의 온 가족에게 '안부'를 전해 주세요.\n증거는 반드시 보관하시기 바랍니다.",
+        "developer": "개발자: mamajunya",
+        "star_request": "마음에 드시면 Star ⭐ 를 눌러주세요",
+        "change_folder": "폴더 변경",
+        "select_folder": "다운로드 폴더 선택",
+        "transfer_data": "데이터 전송",
+        "transfer_data_msg": "원본 폴더에 데이터가 감지되었습니다. 새 폴더로 전송하시겠습니까？",
+        "transfer_failed": "데이터 전송 실패",
+        "folder_changed": "다운로드 폴더가 변경되었습니다",
+        "success": "성공",
+        "error": "오류",
+        "warning": "경고",
+        "show_window": "창 표시",
+        "quit": "종료",
+        "close_window": "창 닫기",
+        "close_window_msg": "어떻게 하시겠습니까?",
+        "exit_app": "완전히 종료",
+        "minimize_to_tray": "트레이로 최소화",
+        "cancel": "취소",
+        "remember_choice": "선택 기억",
+        "minimized_to_tray": "시스템 트레이로 최소화되었습니다",
+        "close_behavior": "닫기 동작:",
+        "ask_on_close": "매번 확인",
+        "exit_directly": "직접 종료",
+        "minimize_to_tray_option": "트레이로 최소화",
+        "close_behavior_changed": "닫기 동작이 변경되었습니다",
     },
     "en_US": {
         "app_title": "WhiteJade",
@@ -195,7 +270,7 @@ TRANSLATIONS = {
         "preset_colors": "Presets:",
         "language": "Language:",
         "download_dir": "Download Folder:",
-        "open_folder": "Open Folder",
+        "open_folder": "Open",
         "theme_changed": "Theme changed!",
         "language_changed": "Language changed!\n\nPlease restart the app.",
         "download_settings": "📥 Download Settings",
@@ -232,6 +307,31 @@ TRANSLATIONS = {
         "get_token": "🔑 Get Token",
         "about": "About",
         "about_text": "WhiteJade is one of the main branches of the cll project,\n aiming to efficiently curate content.\n WhiteJade can automatically fetch and filter content from pixiv,\n maximizing time savings and preventing severe eye strain.\n Note: This software is completely open source and free.\n If you have purchased this software online,\n please request a refund immediately and 'send your regards' to the seller's entire family.\n Be sure to keep the evidence.",
+        "developer": "Developer: mamajunya",
+        "star_request": "If you like it, please give it a Star ⭐",
+        "change_folder": "Change Folder",
+        "select_folder": "Select Download Folder",
+        "transfer_data": "Transfer Data",
+        "transfer_data_msg": "Data detected in the original folder. Transfer to the new folder?",
+        "transfer_failed": "Data transfer failed",
+        "folder_changed": "Download folder changed",
+        "success": "Success",
+        "error": "Error",
+        "warning": "Warning",
+        "show_window": "Show Window",
+        "quit": "Quit",
+        "close_window": "Close Window",
+        "close_window_msg": "What would you like to do?",
+        "exit_app": "Exit Completely",
+        "minimize_to_tray": "Minimize to Tray",
+        "cancel": "Cancel",
+        "remember_choice": "Remember my choice",
+        "minimized_to_tray": "Minimized to system tray",
+        "close_behavior": "Close Behavior:",
+        "ask_on_close": "Ask every time",
+        "exit_directly": "Exit directly",
+        "minimize_to_tray_option": "Minimize to tray",
+        "close_behavior_changed": "Close behavior changed",
     },
     "fr_FR": {
         "app_title": "WhiteJade",
@@ -244,7 +344,7 @@ TRANSLATIONS = {
         "preset_colors": "Préréglages:",
         "language": "Langue:",
         "download_dir": "Dossier de téléchargement:",
-        "open_folder": "Ouvrir le dossier",
+        "open_folder": "Ouvrir",
         "theme_changed": "Thème changé!",
         "language_changed": "Langue changée!\n\nVeuillez redémarrer l'application.",
         "download_settings": "📥 Paramètres de téléchargement",
@@ -281,6 +381,31 @@ TRANSLATIONS = {
         "get_token": "🔑 Obtenir Token",
         "about": "À propos",
         "about_text": "WhiteJade est l'une des principales branches du projet cll,\nvisant à organiser efficacement le contenu.\nWhiteJade peut récupérer et filtrer automatiquement le contenu de pixiv,\nce qui permet de gagner un maximum de temps et d'éviter de graves fatigues oculaires.\nRemarque : Ce logiciel est entièrement open source et gratuit.\nSi vous avez acheté ce logiciel en ligne,\ndemandez immédiatement un remboursement et « transmettez vos salutations » à toute lafamille\n du vendeur.\nPensez à conserver les preuves.",
+        "developer": "Développeur: mamajunya",
+        "star_request": "Si vous l'aimez, donnez-lui une Star ⭐",
+        "change_folder": "Changer le dossier",
+        "select_folder": "Sélectionner le dossier de téléchargement",
+        "transfer_data": "Transférer les données",
+        "transfer_data_msg": "Données détectées dans le dossier d'origine. Transférer vers le nouveau dossier?",
+        "transfer_failed": "Échec du transfert de données",
+        "folder_changed": "Dossier de téléchargement modifié",
+        "success": "Succès",
+        "error": "Erreur",
+        "warning": "Avertissement",
+        "show_window": "Afficher la fenêtre",
+        "quit": "Quitter",
+        "close_window": "Fermer la fenêtre",
+        "close_window_msg": "Que voulez-vous faire?",
+        "exit_app": "Quitter complètement",
+        "minimize_to_tray": "Réduire dans la barre",
+        "cancel": "Annuler",
+        "remember_choice": "Se souvenir de mon choix",
+        "minimized_to_tray": "Réduit dans la barre système",
+        "close_behavior": "Comportement de fermeture:",
+        "ask_on_close": "Demander à chaque fois",
+        "exit_directly": "Quitter directement",
+        "minimize_to_tray_option": "Réduire dans la barre",
+        "close_behavior_changed": "Comportement de fermeture modifié",
     },
     "de_DE": {
         "app_title": "WhiteJade",
@@ -293,7 +418,7 @@ TRANSLATIONS = {
         "preset_colors": "Voreinstellungen:",
         "language": "Sprache:",
         "download_dir": "Download-Ordner:",
-        "open_folder": "Ordner öffnen",
+        "open_folder": "Öffnen",
         "theme_changed": "Thema geändert!",
         "language_changed": "Sprache geändert!\n\nBitte starten Sie die App neu.",
         "download_settings": "📥 Download-Einstellungen",
@@ -330,6 +455,31 @@ TRANSLATIONS = {
         "get_token": "🔑 Token abrufen",
         "about": "Über",
         "about_text": "WhiteJade ist einer der Hauptzweige des cll-Projekts\nund zielt auf eine effiziente Inhaltskuratierung ab.\nWhiteJade kann automatisch Inhalte von pixiv abrufen und filtern,\nwas maximale Zeitersparnis bringt und schwere Augenbelastungen verhindert.\nHinweis: Diese Software ist vollständig Open Source und kostenlos.\nSollten Sie diese Software online gekauft haben,\nfordern Sie sofort eine Rückerstattung und „übermitteln Sie Ihre Grüße“ an die gesamte Familie \ndes Verkäufers.\nBewahren Sie unbedingt die Nachweise auf.",
+        "developer": "Entwickler: mamajunya",
+        "star_request": "Wenn es Ihnen gefällt, geben Sie bitte einen Star ⭐",
+        "change_folder": "Ordner ändern",
+        "select_folder": "Download-Ordner auswählen",
+        "transfer_data": "Daten übertragen",
+        "transfer_data_msg": "Daten im ursprünglichen Ordner erkannt. In den neuen Ordner übertragen?",
+        "transfer_failed": "Datenübertragung fehlgeschlagen",
+        "folder_changed": "Download-Ordner geändert",
+        "success": "Erfolg",
+        "error": "Fehler",
+        "warning": "Warnung",
+        "show_window": "Fenster anzeigen",
+        "quit": "Beenden",
+        "close_window": "Fenster schließen",
+        "close_window_msg": "Was möchten Sie tun?",
+        "exit_app": "Vollständig beenden",
+        "minimize_to_tray": "In Taskleiste minimieren",
+        "cancel": "Abbrechen",
+        "remember_choice": "Meine Wahl merken",
+        "minimized_to_tray": "In Taskleiste minimiert",
+        "close_behavior": "Schließverhalten:",
+        "ask_on_close": "Jedes Mal fragen",
+        "exit_directly": "Direkt beenden",
+        "minimize_to_tray_option": "In Taskleiste minimieren",
+        "close_behavior_changed": "Schließverhalten geändert",
     },
 }
 
@@ -340,7 +490,7 @@ class WorkThread(QThread):
     finished = pyqtSignal(bool, str)
     
     def __init__(self, query, max_count, min_bookmarks, skip_r18, skip_ai,
-                 enable_moderate, threshold, delete_filtered):
+                 enable_moderate, threshold, delete_filtered, download_folder="downloads"):
         super().__init__()
         self.query = query
         self.max_count = max_count
@@ -350,6 +500,7 @@ class WorkThread(QThread):
         self.enable_moderate = enable_moderate
         self.threshold = threshold
         self.delete_filtered = delete_filtered
+        self.download_folder = download_folder
         self._is_paused = False
         self._is_stopped = False
     
@@ -388,7 +539,7 @@ class WorkThread(QThread):
             token = config.get('refresh_token')
             
             self.progress.emit("[登录] 正在连接 Pixiv 服务器...")
-            downloader = PixivDownloader(refresh_token=token)
+            downloader = PixivDownloader(refresh_token=token, download_dir=self.download_folder)
             
             if self.check_pause():
                 self.finished.emit(False, "任务已停止")
@@ -471,7 +622,7 @@ class WorkThread(QThread):
                 if len(safe_name) > 50:
                     safe_name = safe_name[:50]
                 
-                picture_dir = Path("downloads") / safe_name / "picture"
+                picture_dir = Path(self.download_folder) / safe_name / "picture"
                 
                 if not picture_dir.exists():
                     self.finished.emit(False, "图片目录不存在")
@@ -706,14 +857,21 @@ class PixivDownloaderGUI(QMainWindow):
                         self.current_language = config['language']
                     else:
                         self.current_language = "zh_CN"
+                    # 加载关闭行为
+                    if 'close_behavior' in config:
+                        self.close_behavior = config['close_behavior']
+                    else:
+                        self.close_behavior = "ask"  # 默认每次询问
             else:
                 # 默认值
                 self.theme_color = (255, 182, 193)
                 self.current_language = "zh_CN"
+                self.close_behavior = "ask"
         except Exception as e:
             print(f"加载配置失败: {e}")
             self.theme_color = (255, 182, 193)
             self.current_language = "zh_CN"
+            self.close_behavior = "ask"
     
     def save_config(self):
         """保存设置到配置文件"""
@@ -732,6 +890,7 @@ class PixivDownloaderGUI(QMainWindow):
             # 更新设置
             config['theme_color'] = list(self.theme_color)
             config['language'] = self.current_language
+            config['close_behavior'] = self.close_behavior
             
             # 保存配置
             with open(config_path, 'w', encoding='utf-8') as f:
@@ -871,6 +1030,67 @@ class PixivDownloaderGUI(QMainWindow):
         
         content_main_layout.addWidget(self.tabs)
         main_layout.addWidget(content_area)
+        
+        # 创建系统托盘图标
+        self.create_tray_icon()
+    
+    def create_tray_icon(self):
+        """创建系统托盘图标"""
+        from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
+        from PyQt6.QtGui import QIcon, QAction
+        
+        # 创建托盘图标
+        self.tray_icon = QSystemTrayIcon(self)
+        
+        # 设置图标（使用应用图标）
+        if os.path.exists("icon.png"):
+            self.tray_icon.setIcon(QIcon("icon.png"))
+        else:
+            # 如果没有图标文件，使用默认图标
+            self.tray_icon.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_ComputerIcon))
+        
+        # 创建托盘菜单
+        tray_menu = QMenu()
+        
+        # 显示/隐藏窗口
+        show_action = QAction(self.tr("show_window", "显示窗口"), self)
+        show_action.triggered.connect(self.show_window)
+        tray_menu.addAction(show_action)
+        
+        tray_menu.addSeparator()
+        
+        # 退出
+        quit_action = QAction(self.tr("quit", "退出"), self)
+        quit_action.triggered.connect(self.quit_application)
+        tray_menu.addAction(quit_action)
+        
+        self.tray_icon.setContextMenu(tray_menu)
+        
+        # 双击托盘图标显示窗口
+        self.tray_icon.activated.connect(self.on_tray_activated)
+        
+        # 显示托盘图标
+        self.tray_icon.show()
+        
+        # 设置托盘提示
+        self.tray_icon.setToolTip("WhiteJade - Pixiv 下载器")
+    
+    def on_tray_activated(self, reason):
+        """托盘图标被激活"""
+        from PyQt6.QtWidgets import QSystemTrayIcon
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self.show_window()
+    
+    def show_window(self):
+        """显示窗口"""
+        self.show()
+        self.activateWindow()
+        self.raise_()
+    
+    def quit_application(self):
+        """完全退出应用"""
+        self.tray_icon.hide()
+        QApplication.quit()
     
     def create_download_tab(self):
         """创建下载与过滤标签页"""
@@ -1468,15 +1688,63 @@ class PixivDownloaderGUI(QMainWindow):
         lang_layout.addStretch()
         layout.addLayout(lang_layout)
         
+        # 关闭行为设置
+        close_layout = QHBoxLayout()
+        close_label = QLabel(self.tr("close_behavior", "关闭行为:"))
+        close_label.setFixedWidth(80)
+        close_label.setStyleSheet("color: #666; background: transparent; font-weight: bold;")
+        
+        self.close_behavior_combo = QComboBox()
+        self.close_behavior_combo.addItem(self.tr("ask_on_close", "每次询问"), "ask")
+        self.close_behavior_combo.addItem(self.tr("exit_directly", "直接退出"), "exit")
+        self.close_behavior_combo.addItem(self.tr("minimize_to_tray_option", "最小化到托盘"), "tray")
+        
+        # 设置当前关闭行为
+        for i in range(self.close_behavior_combo.count()):
+            if self.close_behavior_combo.itemData(i) == self.close_behavior:
+                self.close_behavior_combo.setCurrentIndex(i)
+                break
+        
+        self.close_behavior_combo.currentIndexChanged.connect(self.on_close_behavior_changed)
+        self.close_behavior_combo.setFixedHeight(40)
+        
+        close_layout.addWidget(close_label)
+        close_layout.addWidget(self.close_behavior_combo)
+        close_layout.addStretch()
+        layout.addLayout(close_layout)
+        
         # 目录设置
         folder_layout = QHBoxLayout()
         folder_label = QLabel(self.tr("download_dir", "下载目录:"))
         folder_label.setFixedWidth(80)
         folder_label.setStyleSheet("color: #666; background: transparent;")
         
-        open_folder_btn = QPushButton(self.tr("open_folder", "打开下载目录"))
+        # 显示当前下载目录
+        self.download_path_label = QLabel(str(self.get_download_folder()))
+        self.download_path_label.setStyleSheet("""
+            color: #333; 
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 182, 193, 0.5);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+        """)
+        self.download_path_label.setWordWrap(False)
+        
+        change_folder_btn = QPushButton(self.tr("change_folder", "更改目录"))
+        change_folder_btn.clicked.connect(self.change_download_folder)
+        change_folder_btn.setFixedHeight(40)
+        change_folder_btn.setFixedWidth(100)
+        change_folder_btn.setStyleSheet("""
+            QPushButton {
+                color: #333;
+            }
+        """)
+        
+        open_folder_btn = QPushButton(self.tr("open_folder", "打开目录"))
         open_folder_btn.clicked.connect(self.open_download_folder)
         open_folder_btn.setFixedHeight(40)
+        open_folder_btn.setFixedWidth(100)
         open_folder_btn.setStyleSheet("""
             QPushButton {
                 color: #333;
@@ -1484,9 +1752,56 @@ class PixivDownloaderGUI(QMainWindow):
         """)
         
         folder_layout.addWidget(folder_label)
+        folder_layout.addWidget(self.download_path_label, 1)  # 占据剩余空间
+        folder_layout.addWidget(change_folder_btn)
         folder_layout.addWidget(open_folder_btn)
-        folder_layout.addStretch()
         layout.addLayout(folder_layout)
+        
+        # 添加分隔线
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setStyleSheet("background: rgba(255, 182, 193, 0.3); margin: 10px 0;")
+        layout.addWidget(separator)
+        
+        # 开发者信息和 GitHub 链接
+        dev_layout = QHBoxLayout()
+        dev_label = QLabel(self.tr("developer", "开发: mamajunya"))
+        dev_label.setStyleSheet("color: #666; background: transparent; font-size: 13px;")
+        
+        star_label = QLabel(self.tr("star_request", "如果喜欢请给点一个 Star ⭐"))
+        star_label.setStyleSheet("color: #999; background: transparent; font-size: 12px; margin-left: 10px;")
+        
+        github_btn = QPushButton("🌟 GitHub")
+        github_btn.clicked.connect(self.open_github)
+        github_btn.setFixedHeight(35)
+        github_btn.setFixedWidth(120)
+        github_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #24292e, stop:1 #2f363d);
+                color: white;
+                border: 2px solid #444d56;
+                border-radius: 8px;
+                padding: 5px 15px;
+                font-size: 13px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #2f363d, stop:1 #444d56);
+                border: 2px solid #586069;
+            }
+            QPushButton:pressed {
+                background: #1b1f23;
+            }
+        """)
+        
+        dev_layout.addWidget(dev_label)
+        dev_layout.addWidget(star_label)
+        dev_layout.addStretch()
+        dev_layout.addWidget(github_btn)
+        layout.addLayout(dev_layout)
         
         group.setLayout(layout)
         return group
@@ -1799,7 +2114,8 @@ class PixivDownloaderGUI(QMainWindow):
             skip_ai=self.skip_ai_check.isChecked(),
             enable_moderate=self.enable_moderate_check.isChecked(),
             threshold=threshold,
-            delete_filtered=self.delete_filtered_check.isChecked()
+            delete_filtered=self.delete_filtered_check.isChecked(),
+            download_folder=str(self.get_download_folder())
         )
         self.work_thread.progress.connect(self.on_progress)
         self.work_thread.finished.connect(self.on_finished)
@@ -1894,11 +2210,171 @@ class PixivDownloaderGUI(QMainWindow):
     
     def open_download_folder(self):
         """打开下载目录"""
-        download_dir = Path("downloads")
+        download_dir = self.get_download_folder()
         if download_dir.exists():
             os.startfile(str(download_dir)) if sys.platform == "win32" else os.system(f'open "{download_dir}"')
         else:
             QMessageBox.information(self, "提示", "下载目录还不存在")
+    
+    def get_download_folder(self):
+        """获取当前下载目录（返回绝对路径）"""
+        config_file = Path("config.json")
+        if config_file.exists():
+            try:
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    download_path = config.get('download_folder', 'downloads')
+                    return Path(download_path).resolve()  # 转换为绝对路径
+            except:
+                pass
+        return Path("downloads").resolve()  # 转换为绝对路径
+    
+    def save_download_folder(self, folder_path):
+        """保存下载目录到配置（保存绝对路径）"""
+        config_file = Path("config.json")
+        config = {}
+        
+        if config_file.exists():
+            try:
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+            except:
+                pass
+        
+        # 保存绝对路径
+        config['download_folder'] = str(Path(folder_path).resolve())
+        
+        with open(config_file, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+    
+    def change_download_folder(self):
+        """更改下载目录"""
+        from PyQt6.QtWidgets import QFileDialog
+        
+        # 获取当前下载目录（绝对路径）
+        current_folder = self.get_download_folder().resolve()
+        
+        # 选择新目录
+        new_folder = QFileDialog.getExistingDirectory(
+            self,
+            self.tr("select_folder", "选择下载目录"),
+            str(current_folder.parent),
+            QFileDialog.Option.ShowDirsOnly
+        )
+        
+        if not new_folder:
+            return
+        
+        # 转换为绝对路径
+        new_folder_path = Path(new_folder).resolve()
+        
+        # 如果选择的是同一个目录，不做任何操作
+        if new_folder_path == current_folder:
+            return
+        
+        # 询问是否转移数据
+        if current_folder.exists() and any(current_folder.iterdir()):
+            reply = QMessageBox.question(
+                self,
+                self.tr("transfer_data", "转移数据"),
+                self.tr("transfer_data_msg", f"检测到原目录中有数据，是否转移到新目录？\n\n原目录: {current_folder}\n新目录: {new_folder_path}"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel
+            )
+            
+            if reply == QMessageBox.StandardButton.Cancel:
+                return
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                # 转移数据
+                try:
+                    self.log_text.append(f"[系统] 开始转移数据...")
+                    self.log_text.append(f"[系统] 从: {current_folder}")
+                    self.log_text.append(f"[系统] 到: {new_folder_path}")
+                    
+                    # 创建新目录
+                    new_folder_path.mkdir(parents=True, exist_ok=True)
+                    
+                    # 转移所有文件和文件夹
+                    import shutil
+                    transferred_count = 0
+                    errors = []
+                    
+                    for item in current_folder.iterdir():
+                        try:
+                            dest = new_folder_path / item.name
+                            self.log_text.append(f"[系统] 转移: {item.name}")
+                            
+                            if item.is_dir():
+                                if dest.exists():
+                                    # 如果目标已存在，合并内容
+                                    shutil.copytree(str(item), str(dest), dirs_exist_ok=True)
+                                    # 复制后删除原目录
+                                    shutil.rmtree(str(item))
+                                else:
+                                    shutil.move(str(item), str(dest))
+                            else:
+                                if dest.exists():
+                                    dest.unlink()  # 删除已存在的文件
+                                shutil.move(str(item), str(dest))
+                            
+                            transferred_count += 1
+                        except Exception as e:
+                            error_msg = f"转移 {item.name} 失败: {str(e)}"
+                            errors.append(error_msg)
+                            self.log_text.append(f"[错误] {error_msg}")
+                    
+                    if errors:
+                        self.log_text.append(f"[系统] 转移完成，但有 {len(errors)} 个错误")
+                    else:
+                        self.log_text.append(f"[系统] 成功转移 {transferred_count} 个项目")
+                    
+                    # 删除原目录（如果为空）
+                    try:
+                        if not any(current_folder.iterdir()):
+                            current_folder.rmdir()
+                            self.log_text.append(f"[系统] 已删除空的原目录")
+                        else:
+                            remaining = list(current_folder.iterdir())
+                            self.log_text.append(f"[系统] 原目录还有 {len(remaining)} 个项目未转移")
+                    except Exception as e:
+                        self.log_text.append(f"[系统] 删除原目录失败: {str(e)}")
+                    
+                    if errors:
+                        QMessageBox.warning(
+                            self,
+                            self.tr("warning", "警告"),
+                            f"数据转移完成，但有 {len(errors)} 个错误。\n请查看日志了解详情。"
+                        )
+                    
+                except Exception as e:
+                    import traceback
+                    error_detail = traceback.format_exc()
+                    self.log_text.append(f"[错误] 数据转移失败: {error_detail}")
+                    QMessageBox.critical(
+                        self,
+                        self.tr("error", "错误"),
+                        self.tr("transfer_failed", f"数据转移失败: {str(e)}")
+                    )
+                    return
+        
+        # 保存新目录
+        self.save_download_folder(new_folder_path)
+        
+        # 更新显示
+        self.download_path_label.setText(str(new_folder_path))
+        
+        QMessageBox.information(
+            self,
+            self.tr("success", "成功"),
+            self.tr("folder_changed", f"下载目录已更改为:\n{new_folder_path}")
+        )
+        
+        self.log_text.append(f"[系统] 下载目录已更改为: {new_folder_path}")
+    
+    def open_github(self):
+        """打开 GitHub 仓库"""
+        import webbrowser
+        webbrowser.open("https://github.com/mamajunya/WhiteJade")
     
     def mousePressEvent(self, event):
         """鼠标按下事件 - 用于拖动窗口"""
@@ -1917,6 +2393,67 @@ class PixivDownloaderGUI(QMainWindow):
     def mouseReleaseEvent(self, event):
         """鼠标释放事件"""
         self.drag_position = None
+    
+    def closeEvent(self, event):
+        """窗口关闭事件"""
+        if self.close_behavior == "exit":
+            # 直接退出
+            self.quit_application()
+            event.accept()
+        elif self.close_behavior == "tray":
+            # 最小化到托盘
+            event.ignore()
+            self.hide()
+            self.tray_icon.showMessage(
+                "WhiteJade",
+                self.tr("minimized_to_tray", "已最小化到系统托盘"),
+                QSystemTrayIcon.MessageIcon.Information,
+                2000
+            )
+        else:
+            # 询问用户
+            from PyQt6.QtWidgets import QMessageBox, QCheckBox
+            
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle(self.tr("close_window", "关闭窗口"))
+            msg_box.setText(self.tr("close_window_msg", "您想要？"))
+            msg_box.setIcon(QMessageBox.Icon.Question)
+            
+            # 添加按钮
+            exit_btn = msg_box.addButton(self.tr("exit_app", "完全退出"), QMessageBox.ButtonRole.AcceptRole)
+            tray_btn = msg_box.addButton(self.tr("minimize_to_tray", "最小化到托盘"), QMessageBox.ButtonRole.RejectRole)
+            cancel_btn = msg_box.addButton(self.tr("cancel", "取消"), QMessageBox.ButtonRole.RejectRole)
+            
+            # 添加"记住我的选择"复选框
+            remember_checkbox = QCheckBox(self.tr("remember_choice", "记住我的选择"))
+            msg_box.setCheckBox(remember_checkbox)
+            
+            msg_box.exec()
+            
+            clicked_button = msg_box.clickedButton()
+            remember = remember_checkbox.isChecked()
+            
+            if clicked_button == exit_btn:
+                if remember:
+                    self.close_behavior = "exit"
+                    self.save_config()
+                self.quit_application()
+                event.accept()
+            elif clicked_button == tray_btn:
+                if remember:
+                    self.close_behavior = "tray"
+                    self.save_config()
+                event.ignore()
+                self.hide()
+                self.tray_icon.showMessage(
+                    "WhiteJade",
+                    self.tr("minimized_to_tray", "已最小化到系统托盘"),
+                    QSystemTrayIcon.MessageIcon.Information,
+                    2000
+                )
+            else:
+                # 取消
+                event.ignore()
     
     def tr(self, key, default=""):
         """翻译方法"""
@@ -2049,6 +2586,18 @@ class PixivDownloaderGUI(QMainWindow):
                         self.language_combo.setCurrentIndex(i)
                         self.language_combo.blockSignals(False)
                         break
+    
+    def on_close_behavior_changed(self, index):
+        """关闭行为改变时触发"""
+        new_behavior = self.close_behavior_combo.itemData(index)
+        if new_behavior != self.close_behavior:
+            self.close_behavior = new_behavior
+            self.save_config()
+            QMessageBox.information(
+                self,
+                self.tr("success", "成功"),
+                self.tr("close_behavior_changed", "关闭行为已更改")
+            )
     
     def restart_application(self):
         """重启应用"""

@@ -13,6 +13,9 @@ WhiteJade is a main branch of the cll project, designed to efficiently curate co
 - **Task Control**: Support pause, resume, and stop operations
 - **Theme Customization**: Customize interface theme and background colors
 - **Multi-language Support**: Chinese, Japanese, Korean, English, French, German
+- **System Tray**: Minimize to system tray, run in background
+- **Custom Download Folder**: Set custom download directory with automatic data migration
+- **Flexible Close Behavior**: Choose to exit, minimize to tray, or ask every time
 
 ### Advanced Filtering
 - Skip R-18 content
@@ -76,7 +79,32 @@ In the "Download & Filter" tab:
 - Detection Threshold: 0.4 (Very Strict) to 0.8 (Very Loose)
 - Move to ban directory: Move filtered images instead of deleting
 
-### 3. Task Control
+### 3. Settings
+
+**Theme Color**
+- Choose from preset colors or select custom color
+- Real-time preview
+
+**Language**
+- Select from 6 languages
+- Restart required after change
+
+**Close Behavior**
+- Ask every time: Show dialog when closing window
+- Exit directly: Close window exits application
+- Minimize to tray: Close window minimizes to system tray
+
+**Download Folder**
+- View current download directory
+- Change folder: Select new directory with automatic data migration
+- Open folder: Open download directory in file explorer
+
+**System Tray**
+- Double-click tray icon to show/hide window
+- Right-click for menu options
+- Runs in background when minimized
+
+### 4. Task Control
 - Start: Begin download task
 - Pause: Pause current task
 - Resume: Resume paused task
@@ -170,15 +198,26 @@ This software is completely open source and free.
 
 ## Changelog
 
+### v2.1.0
+- System tray support with background running
+- Custom download folder with automatic data migration
+- Flexible close behavior settings (ask/exit/minimize to tray)
+- Simplified button text for better UI appearance
+- Bug fixes and performance improvements
+
 ### v2.0.0
-- Brand new GUI interface
-- Integrated DeepDanbooru AI moderation
-- Smart quantity control
-- Task pause/resume functionality
-- Theme color customization
-- Multi-language support
-- AI artwork filtering
-- Detailed log output
+- Brand new GUI interface with rounded corners and modern design
+- Integrated DeepDanbooru AI moderation system
+- Smart quantity control with automatic adjustment
+- Task pause/resume/stop functionality
+- Theme color customization with preset options
+- Multi-language support (6 languages)
+- AI artwork filtering option
+- System tray support with background running
+- Custom download folder with data migration
+- Flexible close behavior settings
+- Detailed log output with real-time progress
+- GitHub integration button
 
 ## Contact
 
