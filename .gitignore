@@ -39,6 +39,7 @@ desktop.ini
 
 # Project specific
 downloads/
+config.json
 pixiv_downloader/config.json
 temp_get_token.ps1
 wallpaper.jpg
@@ -52,6 +53,9 @@ dist/
 !WhiteJade_simple.spec
 build_*.bat
 build_log*.txt
+installer_output/
+*.zip
+*.exe
 
 # Logs
 *.log
