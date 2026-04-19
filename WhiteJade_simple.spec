@@ -34,6 +34,11 @@ a = Analysis(
         'numpy',
         'PIL',
         'PIL.Image',
+        'scipy',
+        'scipy.special',
+        'scipy.special.cython_special',
+        'skimage',
+        'skimage.transform',
     ],
     hookspath=[],
     hooksconfig={},
@@ -72,7 +77,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,  # 临时启用控制台以便调试
+    console=False,  # 无终端窗口模式
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
