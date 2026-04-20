@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QLabel, QLineEdit, QSpinBox, QCheckBox, QTextEdit,
     QProgressBar, QFileDialog, QMessageBox, QGroupBox,
     QComboBox, QFrame, QScrollArea, QTabWidget, QRadioButton, QButtonGroup,
-    QColorDialog, QSystemTrayIcon
+    QColorDialog, QSystemTrayIcon, QGridLayout
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QProcess
 from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor, QPainterPath
@@ -50,6 +50,9 @@ TRANSLATIONS = {
         "language_changed": "语言已切换！\n\n重启应用后生效。",
         # 下载与过滤
         "download_settings": "📥 下载设置",
+        "download_mode": "下载模式:",
+        "mode_search": "关键词搜索",
+        "mode_bookmarks": "我的收藏夹",
         "search_keyword": "搜索关键词:",
         "keyword_placeholder": "例如: 小萝莉",
         "download_count": "下载数量:",
@@ -59,6 +62,10 @@ TRANSLATIONS = {
         "moderate_settings": "🔍 审核设置",
         "enable_moderate": "启用图片审核（下载完成后自动审核）",
         "detection_threshold": "检测阈值:",
+        "filter_tags": "过滤标签:",
+        "advanced_filter": "高级过滤选项",
+        "custom_tags_hint": "自定义过滤标签（用逗号分隔）",
+        "default_tags": "默认: penis, sex",
         "move_to_ban": "将不合格图片移动到 ban 目录",
         "run_log": "📝 运行日志",
         "log_placeholder": "日志将显示在这里...",
@@ -126,6 +133,9 @@ TRANSLATIONS = {
         "theme_changed": "テーマが変更されました！",
         "language_changed": "言語が変更されました！\n\nアプリを再起動してください。",
         "download_settings": "📥 ダウンロード設定",
+        "download_mode": "ダウンロードモード:",
+        "mode_search": "キーワード検索",
+        "mode_bookmarks": "マイブックマーク",
         "search_keyword": "検索キーワード:",
         "keyword_placeholder": "例: 小さなロリ",
         "download_count": "ダウンロード数:",
@@ -135,6 +145,10 @@ TRANSLATIONS = {
         "moderate_settings": "🔍 審査設定",
         "enable_moderate": "画像審査を有効にする（ダウンロード後に自動審査）",
         "detection_threshold": "検出しきい値:",
+        "filter_tags": "フィルタータグ:",
+        "advanced_filter": "高度なフィルターオプション",
+        "custom_tags_hint": "カスタムフィルタータグ（カンマ区切り）",
+        "default_tags": "デフォルト: penis, sex",
         "move_to_ban": "不適格な画像を ban フォルダに移動",
         "run_log": "📝 実行ログ",
         "log_placeholder": "ログはここに表示されます...",
@@ -200,6 +214,9 @@ TRANSLATIONS = {
         "theme_changed": "테마가 변경되었습니다！",
         "language_changed": "언어가 변경되었습니다！\n\n앱을 다시 시작하세요。",
         "download_settings": "📥 다운로드 설정",
+        "download_mode": "다운로드 모드:",
+        "mode_search": "키워드 검색",
+        "mode_bookmarks": "내 북마크",
         "search_keyword": "검색 키워드:",
         "keyword_placeholder": "예: 꼬마 로리",
         "download_count": "다운로드 수:",
@@ -209,6 +226,10 @@ TRANSLATIONS = {
         "moderate_settings": "🔍 심사 설정",
         "enable_moderate": "이미지 심사 활성화（다운로드 후 자동 심사）",
         "detection_threshold": "감지 임계값:",
+        "filter_tags": "필터 태그:",
+        "advanced_filter": "고급 필터 옵션",
+        "custom_tags_hint": "사용자 정의 필터 태그（쉼표로 구분）",
+        "default_tags": "기본값: penis, sex",
         "move_to_ban": "부적격 이미지를 ban 폴더로 이동",
         "run_log": "📝 실행 로그",
         "log_placeholder": "로그가 여기에 표시됩니다...",
@@ -274,6 +295,9 @@ TRANSLATIONS = {
         "theme_changed": "Theme changed!",
         "language_changed": "Language changed!\n\nPlease restart the app.",
         "download_settings": "📥 Download Settings",
+        "download_mode": "Download Mode:",
+        "mode_search": "Keyword Search",
+        "mode_bookmarks": "My Bookmarks",
         "search_keyword": "Search Keyword:",
         "keyword_placeholder": "e.g.: loli",
         "download_count": "Download Count:",
@@ -283,6 +307,10 @@ TRANSLATIONS = {
         "moderate_settings": "🔍 Moderation Settings",
         "enable_moderate": "Enable Image Moderation (Auto-moderate after download)",
         "detection_threshold": "Detection Threshold:",
+        "filter_tags": "Filter Tags:",
+        "advanced_filter": "Advanced Filter Options",
+        "custom_tags_hint": "Custom filter tags (comma-separated)",
+        "default_tags": "Default: penis, sex",
         "move_to_ban": "Move unqualified images to ban folder",
         "run_log": "📝 Run Log",
         "log_placeholder": "Logs will be displayed here...",
@@ -348,6 +376,9 @@ TRANSLATIONS = {
         "theme_changed": "Thème changé!",
         "language_changed": "Langue changée!\n\nVeuillez redémarrer l'application.",
         "download_settings": "📥 Paramètres de téléchargement",
+        "download_mode": "Mode de téléchargement:",
+        "mode_search": "Recherche par mot-clé",
+        "mode_bookmarks": "Mes signets",
         "search_keyword": "Mot-clé de recherche:",
         "keyword_placeholder": "par ex.: loli",
         "download_count": "Nombre de téléchargements:",
@@ -357,6 +388,10 @@ TRANSLATIONS = {
         "moderate_settings": "🔍 Paramètres de modération",
         "enable_moderate": "Activer la modération d'image (Modération automatique après téléchargement)",
         "detection_threshold": "Seuil de détection:",
+        "filter_tags": "Tags de filtre:",
+        "advanced_filter": "Options de filtre avancées",
+        "custom_tags_hint": "Tags de filtre personnalisés (séparés par des virgules)",
+        "default_tags": "Par défaut: penis, sex",
         "move_to_ban": "Déplacer les images non qualifiées vers le dossier ban",
         "run_log": "📝 Journal d'exécution",
         "log_placeholder": "Les journaux seront affichés ici...",
@@ -422,6 +457,10 @@ TRANSLATIONS = {
         "theme_changed": "Thema geändert!",
         "language_changed": "Sprache geändert!\n\nBitte starten Sie die App neu.",
         "download_settings": "📥 Download-Einstellungen",
+        "download_settings": "📥 Download-Einstellungen",
+        "download_mode": "Download-Modus:",
+        "mode_search": "Stichwortsuche",
+        "mode_bookmarks": "Meine Lesezeichen",
         "search_keyword": "Suchbegriff:",
         "keyword_placeholder": "z.B.: loli",
         "download_count": "Download-Anzahl:",
@@ -431,6 +470,10 @@ TRANSLATIONS = {
         "moderate_settings": "🔍 Moderationseinstellungen",
         "enable_moderate": "Bildmoderation aktivieren (Automatische Moderation nach Download)",
         "detection_threshold": "Erkennungsschwelle:",
+        "filter_tags": "Filter-Tags:",
+        "advanced_filter": "Erweiterte Filteroptionen",
+        "custom_tags_hint": "Benutzerdefinierte Filter-Tags (durch Kommas getrennt)",
+        "default_tags": "Standard: penis, sex",
         "move_to_ban": "Unqualifizierte Bilder in den Ban-Ordner verschieben",
         "run_log": "📝 Ausführungsprotokoll",
         "log_placeholder": "Protokolle werden hier angezeigt...",
@@ -490,7 +533,8 @@ class WorkThread(QThread):
     finished = pyqtSignal(bool, str)
     
     def __init__(self, query, max_count, min_bookmarks, skip_r18, skip_ai,
-                 enable_moderate, threshold, delete_filtered, download_folder="downloads"):
+                 enable_moderate, threshold, delete_filtered, download_folder="downloads",
+                 download_mode="search", custom_tags=None):
         super().__init__()
         self.query = query
         self.max_count = max_count
@@ -501,6 +545,8 @@ class WorkThread(QThread):
         self.threshold = threshold
         self.delete_filtered = delete_filtered
         self.download_folder = download_folder
+        self.download_mode = download_mode  # "search" 或 "bookmarks"
+        self.custom_tags = custom_tags if custom_tags else ["penis", "sex"]  # 自定义过滤标签
         self._is_paused = False
         self._is_stopped = False
     
@@ -550,7 +596,12 @@ class WorkThread(QThread):
                 return
             
             self.progress.emit("[登录] 登录成功")
-            self.progress.emit(f"[下载] 开始搜索关键词: {self.query}")
+            
+            if self.download_mode == "search":
+                self.progress.emit(f"[下载] 开始搜索关键词: {self.query}")
+            else:
+                self.progress.emit(f"[下载] 开始下载收藏夹作品")
+            
             self.progress.emit(f"[下载] 目标保留数量: {self.max_count} 张图片")
             self.progress.emit(f"[下载] 最小收藏数: {self.min_bookmarks}")
             self.progress.emit(f"[下载] 跳过 R-18: {'是' if self.skip_r18 else '否'}")
@@ -586,13 +637,22 @@ class WorkThread(QThread):
             monitor_thread = threading.Thread(target=monitor_progress, daemon=True)
             monitor_thread.start()
             
-            count = downloader.download_by_query(
-                query=self.query,
-                max_count=download_count,
-                skip_r18=self.skip_r18,
-                skip_ai=self.skip_ai,
-                min_bookmarks=self.min_bookmarks
-            )
+            # 根据下载模式选择不同的下载方法
+            if self.download_mode == "search":
+                count = downloader.download_by_query(
+                    query=self.query,
+                    max_count=download_count,
+                    skip_r18=self.skip_r18,
+                    skip_ai=self.skip_ai,
+                    min_bookmarks=self.min_bookmarks
+                )
+            else:  # bookmarks mode
+                count = downloader.download_from_bookmarks(
+                    max_count=download_count,
+                    skip_r18=self.skip_r18,
+                    skip_ai=self.skip_ai,
+                    min_bookmarks=self.min_bookmarks
+                )
             
             monitor_running = False  # 停止监控线程
             
@@ -648,8 +708,12 @@ class WorkThread(QThread):
                     # 0.6 -> 默认（推荐）
                     # 0.7 -> 宽松
                     # 0.8 -> 非常宽松
-                    moderator = DeepDanbooruModerator(threshold=self.threshold)
+                    moderator = DeepDanbooruModerator(
+                        threshold=self.threshold,
+                        filter_tags=self.custom_tags  # 使用自定义标签
+                    )
                     
+                    self.progress.emit(f"[审核] 过滤标签: {', '.join(self.custom_tags)}")
                     self.progress.emit("[审核] 步骤 3/3: 模型加载成功 ✓")
                 except Exception as e:
                     import traceback
@@ -1455,14 +1519,34 @@ class PixivDownloaderGUI(QMainWindow):
         layout = QVBoxLayout()
         layout.setSpacing(12)
         
-        # 关键词
+        # 下载模式选择
+        mode_layout = QHBoxLayout()
+        mode_label = QLabel(self.tr("download_mode", "下载模式:"))
+        mode_label.setFixedWidth(100)
+        mode_label.setStyleSheet("color: #666; background: transparent;")
+        
+        self.mode_search_radio = QRadioButton(self.tr("mode_search", "关键词搜索"))
+        self.mode_search_radio.setChecked(True)
+        self.mode_search_radio.setStyleSheet("color: #666; background: transparent;")
+        self.mode_search_radio.toggled.connect(self.toggle_download_mode)
+        
+        self.mode_bookmarks_radio = QRadioButton(self.tr("mode_bookmarks", "我的收藏夹"))
+        self.mode_bookmarks_radio.setStyleSheet("color: #666; background: transparent;")
+        
+        mode_layout.addWidget(mode_label)
+        mode_layout.addWidget(self.mode_search_radio)
+        mode_layout.addWidget(self.mode_bookmarks_radio)
+        mode_layout.addStretch()
+        layout.addLayout(mode_layout)
+        
+        # 关键词（仅在搜索模式下显示）
         keyword_layout = QHBoxLayout()
-        keyword_label = QLabel(self.tr("search_keyword", "搜索关键词:"))
-        keyword_label.setFixedWidth(100)
-        keyword_label.setStyleSheet("color: #666; background: transparent;")
+        self.keyword_label = QLabel(self.tr("search_keyword", "搜索关键词:"))
+        self.keyword_label.setFixedWidth(100)
+        self.keyword_label.setStyleSheet("color: #666; background: transparent;")
         self.keyword_input = QLineEdit()
         self.keyword_input.setPlaceholderText(self.tr("keyword_placeholder", "例如: 小萝莉"))
-        keyword_layout.addWidget(keyword_label)
+        keyword_layout.addWidget(self.keyword_label)
         keyword_layout.addWidget(self.keyword_input)
         layout.addLayout(keyword_layout)
         
@@ -1565,6 +1649,73 @@ class PixivDownloaderGUI(QMainWindow):
         self.delete_filtered_check.setChecked(True)
         self.delete_filtered_check.setStyleSheet("color: #666; background: transparent;")
         moderate_options_layout.addWidget(self.delete_filtered_check)
+        
+        # 高级过滤选项
+        advanced_filter_check = QCheckBox(self.tr("advanced_filter", "高级过滤选项"))
+        advanced_filter_check.setStyleSheet("color: #666; background: transparent; font-weight: bold;")
+        advanced_filter_check.toggled.connect(self.toggle_advanced_filter)
+        moderate_options_layout.addWidget(advanced_filter_check)
+        
+        # 自定义标签容器
+        self.custom_tags_widget = QWidget()
+        custom_tags_layout = QVBoxLayout(self.custom_tags_widget)
+        custom_tags_layout.setContentsMargins(20, 5, 0, 0)
+        custom_tags_layout.setSpacing(8)
+        
+        tags_label = QLabel(self.tr("filter_tags", "过滤标签:"))
+        tags_label.setStyleSheet("color: #666; background: transparent; font-size: 12px;")
+        custom_tags_layout.addWidget(tags_label)
+        
+        # 创建标签复选框网格
+        tags_grid = QGridLayout()
+        tags_grid.setSpacing(8)
+        
+        # 定义常用的NSFW标签（按严重程度分类）
+        self.filter_tag_checkboxes = {}
+        nsfw_tags = [
+            # 第一行：默认选中（最严重）
+            ("penis", "男性生殖器", True),
+            ("sex", "性交", True),
+            ("vaginal", "阴道性交", False),
+            ("anal", "肛交", False),
+            # 第二行：口交相关
+            ("fellatio", "口交(男)", False),
+            ("cunnilingus", "口交(女)", False),
+            ("pussy", "女性生殖器", False),
+            ("nude", "裸体", False),
+            # 第三行：其他性行为
+            ("masturbation", "自慰", False),
+            ("cum", "精液", False),
+            ("orgasm", "高潮", False),
+            ("ejaculation", "射精", False),
+            # 第四行：身体部位
+            ("nipples", "乳头", False),
+            ("pussy_juice", "爱液", False),
+            ("sex_from_behind", "后入", False),
+            ("female_ejaculation", "潮吹", False),
+        ]
+        
+        row = 0
+        col = 0
+        for tag, label, checked in nsfw_tags:
+            checkbox = QCheckBox(f"{label} ({tag})")
+            checkbox.setChecked(checked)
+            checkbox.setStyleSheet("color: #666; background: transparent; font-size: 11px;")
+            self.filter_tag_checkboxes[tag] = checkbox
+            tags_grid.addWidget(checkbox, row, col)
+            col += 1
+            if col >= 4:  # 每行4个
+                col = 0
+                row += 1
+        
+        custom_tags_layout.addLayout(tags_grid)
+        
+        default_hint = QLabel(self.tr("default_tags", "默认: penis, sex"))
+        default_hint.setStyleSheet("color: #999; background: transparent; font-size: 11px;")
+        custom_tags_layout.addWidget(default_hint)
+        
+        self.custom_tags_widget.setVisible(False)  # 默认隐藏
+        moderate_options_layout.addWidget(self.custom_tags_widget)
         
         layout.addWidget(self.moderate_options)
         
@@ -1809,6 +1960,16 @@ class PixivDownloaderGUI(QMainWindow):
     def toggle_moderate_options(self, checked):
         """切换审核选项的可见性"""
         self.moderate_options.setVisible(checked)
+    
+    def toggle_download_mode(self, checked):
+        """切换下载模式时显示/隐藏关键词输入框"""
+        # checked为True表示选中了搜索模式
+        self.keyword_label.setVisible(checked)
+        self.keyword_input.setVisible(checked)
+    
+    def toggle_advanced_filter(self, checked):
+        """切换高级过滤选项的可见性"""
+        self.custom_tags_widget.setVisible(checked)
     
     def apply_styles(self):
         """应用全局样式 - 支持自定义RGB颜色"""
@@ -2080,10 +2241,17 @@ class PixivDownloaderGUI(QMainWindow):
     
     def start_work(self):
         """开始工作"""
-        keyword = self.keyword_input.text().strip()
-        if not keyword:
-            QMessageBox.warning(self, "提示", "请输入搜索关键词！")
-            return
+        # 获取下载模式
+        download_mode = "search" if self.mode_search_radio.isChecked() else "bookmarks"
+        
+        # 如果是搜索模式，检查关键词
+        if download_mode == "search":
+            keyword = self.keyword_input.text().strip()
+            if not keyword:
+                QMessageBox.warning(self, "提示", "请输入搜索关键词！")
+                return
+        else:
+            keyword = "my_bookmarks"  # 收藏夹模式使用固定名称
         
         self.start_btn.setEnabled(False)
         self.pause_btn.setEnabled(True)
@@ -2091,11 +2259,17 @@ class PixivDownloaderGUI(QMainWindow):
         self.log_text.clear()
         self.log_text.append("=" * 50)
         self.log_text.append(f"[任务] 开始新任务")
-        self.log_text.append(f"[任务] 搜索关键词: {keyword}")
+        
+        if download_mode == "search":
+            self.log_text.append(f"[任务] 下载模式: 关键词搜索")
+            self.log_text.append(f"[任务] 搜索关键词: {keyword}")
+        else:
+            self.log_text.append(f"[任务] 下载模式: 我的收藏夹")
+        
         self.log_text.append(f"[任务] 下载数量: {self.count_spin.value()}")
         self.log_text.append(f"[任务] 最小收藏: {self.bookmark_spin.value()}")
         self.log_text.append("=" * 50)
-        self.status_label.setText(f"准备开始: {keyword}")
+        self.status_label.setText(f"准备开始: {keyword if download_mode == 'search' else '收藏夹'}")
         self.progress_bar.setRange(0, 0)  # 不确定进度模式
         self.progress_bar.setFormat("处理中...")
         
@@ -2104,6 +2278,20 @@ class PixivDownloaderGUI(QMainWindow):
         if self.enable_moderate_check.isChecked():
             threshold_text = self.threshold_combo.currentText()
             threshold = float(threshold_text.split()[0])
+        
+        # 获取下载模式
+        download_mode = "search" if self.mode_search_radio.isChecked() else "bookmarks"
+        
+        # 获取自定义标签（从复选框）
+        custom_tags = []
+        if hasattr(self, 'filter_tag_checkboxes'):
+            for tag, checkbox in self.filter_tag_checkboxes.items():
+                if checkbox.isChecked():
+                    custom_tags.append(tag)
+        
+        # 如果没有选择任何标签，使用默认值
+        if not custom_tags:
+            custom_tags = ["penis", "sex"]
         
         # 创建工作线程
         self.work_thread = WorkThread(
@@ -2115,7 +2303,9 @@ class PixivDownloaderGUI(QMainWindow):
             enable_moderate=self.enable_moderate_check.isChecked(),
             threshold=threshold,
             delete_filtered=self.delete_filtered_check.isChecked(),
-            download_folder=str(self.get_download_folder())
+            download_folder=str(self.get_download_folder()),
+            download_mode=download_mode,
+            custom_tags=custom_tags
         )
         self.work_thread.progress.connect(self.on_progress)
         self.work_thread.finished.connect(self.on_finished)

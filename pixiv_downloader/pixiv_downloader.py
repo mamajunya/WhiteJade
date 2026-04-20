@@ -256,6 +256,44 @@ class PixivDownloader:
             print(f"获取推荐作品失败: {e}")
             return []
     
+    def get_user_bookmarks(self, user_id: int = None, restrict: str = 'public', offset: int = 0) -> List[Dict]:
+        """
+        获取用户收藏夹中的作品
+        
+        Args:
+            user_id: 用户ID，如果为None则获取当前登录用户的收藏
+            restrict: 公开性 ('public' 或 'private')
+            offset: 偏移量
+            
+        Returns:
+            List[Dict]: 收藏的作品列表
+        """
+        if not self.is_logged_in:
+            print("错误: 请先登录Pixiv")
+            return []
+        
+        try:
+            # 如果没有指定user_id，获取当前登录用户的ID
+            if user_id is None:
+                user_info = self.api.user_detail(self.api.user_id)
+                user_id = user_info.user.id
+            
+            print(f"正在获取用户 {user_id} 的收藏夹...")
+            json_result = self.api.user_bookmarks_illust(user_id, restrict=restrict, offset=offset)
+            
+            if not json_result or 'illusts' not in json_result:
+                print("未找到收藏作品")
+                return []
+            
+            illusts = json_result['illusts']
+            self.stats['total_searched'] += len(illusts)
+            print(f"找到 {len(illusts)} 个收藏作品")
+            return illusts
+            
+        except Exception as e:
+            print(f"获取收藏夹失败: {e}")
+            return []
+    
     def get_ranking_illustrations(self, mode: str = 'day', date: str = None, offset: int = 0) -> List[Dict]:
         """
         获取排行榜作品
@@ -566,6 +604,94 @@ class PixivDownloader:
             
             offset += len(illusts)
             time.sleep(2)
+        
+        self._print_stats()
+        return downloaded_count
+    
+    def download_from_bookmarks(self, max_count: int = 50, user_id: int = None,
+                               restrict: str = 'public', skip_r18: bool = False, 
+                               skip_ai: bool = False, min_bookmarks: int = 0) -> int:
+        """
+        从用户收藏夹下载作品
+        
+        Args:
+            max_count: 最大下载数量
+            user_id: 用户ID，如果为None则使用当前登录用户
+            restrict: 公开性 ('public' 或 'private')
+            skip_r18: 是否跳过R-18作品
+            skip_ai: 是否跳过AI作品
+            min_bookmarks: 最小收藏数过滤
+            
+        Returns:
+            int: 成功下载的数量
+        """
+        if not self.is_logged_in:
+            print("错误: 请先登录Pixiv")
+            return 0
+        
+        # 获取用户ID
+        if user_id is None:
+            try:
+                user_info = self.api.user_detail(self.api.user_id)
+                user_id = user_info.user.id
+            except:
+                print("错误: 无法获取当前用户ID")
+                return 0
+        
+        project_name = f"bookmarks_{user_id}"
+        self._load_history(project_name)
+        
+        downloaded_count = 0
+        offset = 0
+        
+        print(f"\n开始下载收藏夹作品:")
+        print(f"  用户ID: {user_id}")
+        print(f"  目标数量: {max_count}")
+        print(f"  最小收藏数: {min_bookmarks}")
+        print(f"  跳过R-18: {'是' if skip_r18 else '否'}")
+        print(f"  跳过AI作品: {'是' if skip_ai else '否'}\n")
+        
+        while downloaded_count < max_count:
+            illusts = self.get_user_bookmarks(user_id, restrict=restrict, offset=offset)
+            
+            if not illusts:
+                print("没有更多收藏作品了")
+                break
+            
+            for illust in illusts:
+                if downloaded_count >= max_count:
+                    break
+                
+                # 跳过R-18作品（可选）
+                if skip_r18 and illust.get('x_restrict', 0) > 0:
+                    print(f"跳过R-18: {illust['title']} (ID: {illust['id']})")
+                    self.stats['total_skipped'] += 1
+                    continue
+                
+                # 跳过AI作品（可选）
+                if skip_ai and illust.get('illust_ai_type', 0) == 2:
+                    print(f"跳过AI作品: {illust['title']} (ID: {illust['id']})")
+                    self.stats['total_skipped'] += 1
+                    continue
+                
+                # 收藏数过滤
+                if illust.get('total_bookmarks', 0) < min_bookmarks:
+                    print(f"收藏数不足: {illust['title']} ({illust.get('total_bookmarks', 0)} < {min_bookmarks})")
+                    self.stats['total_skipped'] += 1
+                    continue
+                
+                # 获取完整作品信息
+                full_illust = self.get_illustration_details(illust['id'])
+                if full_illust:
+                    if self.download_illustration(full_illust, project_name=project_name):
+                        downloaded_count += 1
+                        print(f"进度: {downloaded_count}/{max_count}")
+                
+                # 避免请求过快
+                time.sleep(1.5)
+            
+            offset += len(illusts)
+            time.sleep(2)  # 页间延迟
         
         self._print_stats()
         return downloaded_count

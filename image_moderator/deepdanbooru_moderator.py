@@ -27,13 +27,14 @@ except ImportError as e:
 class DeepDanbooruModerator:
     """DeepDanbooru 图片审核器 - 专门针对动漫图片"""
     
-    def __init__(self, threshold: float = 0.5, model_path: str = None):
+    def __init__(self, threshold: float = 0.5, model_path: str = None, filter_tags: List[str] = None):
         """
         初始化审核器
         
         Args:
             threshold: 检测阈值 (0-1)，标签置信度超过此值才会被识别
             model_path: 模型路径（如果为 None 则使用默认路径）
+            filter_tags: 自定义过滤标签列表（如果为 None 则使用默认标签）
         """
         print("正在加载 DeepDanbooru 模型...")
         print("（首次运行会自动下载模型，约 600MB，请耐心等待）")
@@ -106,13 +107,18 @@ class DeepDanbooruModerator:
         
         self.threshold = threshold
         
-        # 需要过滤的标签（只过滤男性生殖器和性交）
-        self.filter_tags = {
-            'penis',           # 男性生殖器
-            'sex',             # 性交
-            'vaginal',         # 阴道性交
-            'anal',            # 肛交
-        }
+        # 需要过滤的标签
+        if filter_tags is not None:
+            # 使用用户自定义的标签
+            self.filter_tags = set(filter_tags)
+        else:
+            # 使用默认标签（只过滤男性生殖器和性交）
+            self.filter_tags = {
+                'penis',           # 男性生殖器
+                'sex',             # 性交
+                'vaginal',         # 阴道性交
+                'anal',            # 肛交
+            }
         
         # 可选的严格标签（可以根据需要添加）
         self.optional_strict_tags = {

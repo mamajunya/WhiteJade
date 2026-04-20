@@ -8,7 +8,9 @@ WhiteJade is a main branch of the cll project, designed to efficiently curate co
 
 ### Core Functions
 - **Smart Search & Download**: Batch download Pixiv artworks by keywords, bookmarks, and more
+- **Bookmark Download**: Download artworks from your Pixiv bookmarks/favorites
 - **AI Content Moderation**: Automatically filter inappropriate content using DeepDanbooru deep learning model
+- **Custom Filter Tags**: Choose from 16 NSFW tags to customize content filtering
 - **Precise Quantity Control**: Automatically adjusts download volume to ensure final kept images meet target count
 - **Task Control**: Support pause, resume, and stop operations
 - **Theme Customization**: Customize interface theme and background colors
@@ -22,6 +24,7 @@ WhiteJade is a main branch of the cll project, designed to efficiently curate co
 - Remove AI-generated artworks
 - Minimum bookmark count filter
 - Adjustable moderation strictness (5 levels)
+- Custom filter tags selection (16 NSFW tags available)
 
 ### Automated Management
 - Auto-categorization: Approved images, filtered images, download history
@@ -67,8 +70,12 @@ In the "Token Acquisition" tab:
 ### 2. Download & Filter
 In the "Download & Filter" tab:
 
+**Download Mode**
+- Keyword Search: Search and download by keywords (original mode)
+- My Bookmarks: Download artworks from your Pixiv bookmarks/favorites
+
 **Download Settings**
-- Search Keywords: Enter character name or tags
+- Search Keywords: Enter character name or tags (only for Keyword Search mode)
 - Download Count: Final number of images to keep
 - Minimum Bookmarks: Filter low-bookmark artworks
 - Skip R-18: Filter adult content
@@ -77,6 +84,9 @@ In the "Download & Filter" tab:
 **Moderation Settings**
 - Enable Image Moderation: Auto-filter inappropriate content
 - Detection Threshold: 0.4 (Very Strict) to 0.8 (Very Loose)
+- Advanced Filter Options: Customize which NSFW tags to filter
+  - 16 selectable tags including: penis, sex, vaginal, anal, fellatio, cunnilingus, pussy, nude, masturbation, cum, orgasm, ejaculation, nipples, pussy_juice, sex_from_behind, female_ejaculation
+  - Default: penis + sex (recommended for most users)
 - Move to ban directory: Move filtered images instead of deleting
 
 ### 3. Settings
@@ -143,10 +153,18 @@ WhiteJade/
 - Automatically detects and filters inappropriate content
 
 ### Filter Tags
-- `penis` (genitalia)
+Default tags (recommended):
+- `penis` (male genitalia)
 - `sex` (sexual acts)
-- `vaginal` (vaginal-related)
-- `anal` (anal-related)
+
+Additional selectable tags (16 total):
+- `vaginal`, `anal` (penetration types)
+- `fellatio`, `cunnilingus` (oral acts)
+- `pussy`, `nude` (nudity)
+- `masturbation`, `cum`, `orgasm`, `ejaculation` (sexual activities)
+- `nipples`, `pussy_juice`, `sex_from_behind`, `female_ejaculation` (body parts and acts)
+
+Users can customize which tags to filter through the Advanced Filter Options.
 
 ### Threshold Explanation
 - **0.4 - Very Strict** (default): Strictest filtering, suitable for public settings
@@ -197,6 +215,16 @@ This software is completely open source and free.
 **Important Notice**: If you purchased this software online, please request a refund immediately and report the seller.
 
 ## Changelog
+
+### v2.2.1 - Better Download (2024-XX-XX)
+- **New Download Mode**: Added "My Bookmarks" mode to download from your Pixiv favorites
+- **Custom Filter Tags**: Advanced filter options with 16 selectable NSFW tags
+  - Visual checkbox interface for easy tag selection
+  - Default: penis + sex (suitable for most users)
+  - Customizable based on personal preferences
+- **Enhanced Moderation**: More flexible content filtering with tag-based system
+- **Improved UX**: Better organization of download modes and filter options
+- Multi-language support for all new features
 
 ### v2.1.0
 - System tray support with background running
