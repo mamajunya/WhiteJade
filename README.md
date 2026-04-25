@@ -81,9 +81,11 @@ In the "Download & Filter" tab:
 **Download Mode**
 - Keyword Search: Search and download by keywords (original mode)
 - My Bookmarks: Download artworks from your Pixiv bookmarks/favorites
+- Author Search: Search and download artworks by artist name
 
 **Download Settings**
 - Search Keywords: Enter character name or tags (only for Keyword Search mode)
+- Author Name: Enter artist name (only for Author Search mode)
 - Download Count: Final number of images to keep
 - Minimum Bookmarks: Filter low-bookmark artworks
 - Skip R-18: Filter adult content
@@ -267,6 +269,15 @@ This software is completely open source and free.
 **Important Notice**: If you purchased this software online, please request a refund immediately and report the seller.
 
 ## Changelog
+
+### v2.3.1 - Author Search Support (2026-04-25)
+- **Author Search Mode**: New download mode to search and download by artist name
+  - Automatically searches for artists on Pixiv
+  - Downloads all artworks from the matched artist
+  - Seamless integration with existing filters and moderation
+- **Enhanced Search**: Added search_user() and get_user_illustrations() methods
+- **Smart UI**: Input fields automatically switch based on selected mode
+- Multi-language support for author search (6 languages)
 
 ### v2.3.0 - Performance & Animation Enhancement (2026-04-25)
 - **Multi-threaded Download**: Configurable concurrent downloads (1-10 threads, default 3)

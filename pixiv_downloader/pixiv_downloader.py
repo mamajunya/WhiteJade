@@ -294,6 +294,69 @@ class PixivDownloader:
             print(f"获取收藏夹失败: {e}")
             return []
     
+    def search_user(self, user_name: str) -> List[Dict]:
+        """
+        搜索用户
+        
+        Args:
+            user_name: 用户名/作者名
+            
+        Returns:
+            List[Dict]: 用户列表
+        """
+        if not self.is_logged_in:
+            print("错误: 请先登录Pixiv")
+            return []
+        
+        try:
+            print(f"正在搜索用户: {user_name}")
+            json_result = self.api.search_user(user_name)
+            
+            if not json_result or 'user_previews' not in json_result:
+                print("未找到用户")
+                return []
+            
+            users = json_result['user_previews']
+            print(f"找到 {len(users)} 个用户")
+            return users
+            
+        except Exception as e:
+            print(f"搜索用户失败: {e}")
+            return []
+    
+    def get_user_illustrations(self, user_id: int, illust_type: str = 'illust', offset: int = 0) -> List[Dict]:
+        """
+        获取用户的作品列表
+        
+        Args:
+            user_id: 用户ID
+            illust_type: 作品类型 ('illust', 'manga', 'ugoira')
+            offset: 偏移量
+            
+        Returns:
+            List[Dict]: 作品列表
+        """
+        if not self.is_logged_in:
+            print("错误: 请先登录Pixiv")
+            return []
+        
+        try:
+            print(f"正在获取用户 {user_id} 的作品...")
+            json_result = self.api.user_illusts(user_id, type=illust_type, offset=offset)
+            
+            if not json_result or 'illusts' not in json_result:
+                print("未找到作品")
+                return []
+            
+            illusts = json_result['illusts']
+            self.stats['total_searched'] += len(illusts)
+            print(f"找到 {len(illusts)} 个作品")
+            return illusts
+            
+        except Exception as e:
+            print(f"获取用户作品失败: {e}")
+            return []
+    
     def get_ranking_illustrations(self, mode: str = 'day', date: str = None, offset: int = 0) -> List[Dict]:
         """
         获取排行榜作品

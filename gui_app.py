@@ -56,8 +56,11 @@ TRANSLATIONS = {
         "download_mode": "下载模式:",
         "mode_search": "关键词搜索",
         "mode_bookmarks": "我的收藏夹",
+        "mode_author": "作者搜索",
         "search_keyword": "搜索关键词:",
         "keyword_placeholder": "例如: 小萝莉",
+        "author_name": "作者名:",
+        "author_placeholder": "例如: 画师名称",
         "download_count": "下载数量:",
         "min_bookmarks": "最小收藏:",
         "skip_r18": "跳过 R-18 内容",
@@ -147,8 +150,11 @@ TRANSLATIONS = {
         "download_mode": "ダウンロードモード:",
         "mode_search": "キーワード検索",
         "mode_bookmarks": "マイブックマーク",
+        "mode_author": "作者検索",
         "search_keyword": "検索キーワード:",
         "keyword_placeholder": "例: 小さなロリ",
+        "author_name": "作者名:",
+        "author_placeholder": "例: 絵師名",
         "download_count": "ダウンロード数:",
         "min_bookmarks": "最小ブックマーク:",
         "skip_r18": "R-18 コンテンツをスキップ",
@@ -236,8 +242,11 @@ TRANSLATIONS = {
         "download_mode": "다운로드 모드:",
         "mode_search": "키워드 검색",
         "mode_bookmarks": "내 북마크",
+        "mode_author": "작가 검색",
         "search_keyword": "검색 키워드:",
         "keyword_placeholder": "예: 꼬마 로리",
+        "author_name": "작가명:",
+        "author_placeholder": "예: 화가 이름",
         "download_count": "다운로드 수:",
         "min_bookmarks": "최소 북마크:",
         "skip_r18": "R-18 콘텐츠 건너뛰기",
@@ -325,8 +334,11 @@ TRANSLATIONS = {
         "download_mode": "Download Mode:",
         "mode_search": "Keyword Search",
         "mode_bookmarks": "My Bookmarks",
+        "mode_author": "Author Search",
         "search_keyword": "Search Keyword:",
         "keyword_placeholder": "e.g.: loli",
+        "author_name": "Author Name:",
+        "author_placeholder": "e.g.: Artist Name",
         "download_count": "Download Count:",
         "min_bookmarks": "Min Bookmarks:",
         "skip_r18": "Skip R-18 Content",
@@ -414,8 +426,11 @@ TRANSLATIONS = {
         "download_mode": "Mode de téléchargement:",
         "mode_search": "Recherche par mot-clé",
         "mode_bookmarks": "Mes signets",
+        "mode_author": "Recherche d'auteur",
         "search_keyword": "Mot-clé de recherche:",
         "keyword_placeholder": "par ex.: loli",
+        "author_name": "Nom de l'auteur:",
+        "author_placeholder": "par ex.: Nom de l'artiste",
         "download_count": "Nombre de téléchargements:",
         "min_bookmarks": "Signets minimum:",
         "skip_r18": "Ignorer le contenu R-18",
@@ -504,8 +519,11 @@ TRANSLATIONS = {
         "download_mode": "Download-Modus:",
         "mode_search": "Stichwortsuche",
         "mode_bookmarks": "Meine Lesezeichen",
+        "mode_author": "Autorensuche",
         "search_keyword": "Suchbegriff:",
         "keyword_placeholder": "z.B.: loli",
+        "author_name": "Autorenname:",
+        "author_placeholder": "z.B.: Künstlername",
         "download_count": "Download-Anzahl:",
         "min_bookmarks": "Min. Lesezeichen:",
         "skip_r18": "R-18-Inhalte überspringen",
@@ -955,6 +973,8 @@ class WorkThread(QThread):
             
             if self.download_mode == "search":
                 self.progress.emit(f"[下载] 开始搜索关键词: {self.query}")
+            elif self.download_mode == "author":
+                self.progress.emit(f"[下载] 开始搜索作者: {self.query}")
             else:
                 self.progress.emit(f"[下载] 开始下载收藏夹作品")
             
@@ -978,7 +998,23 @@ class WorkThread(QThread):
             self.progress.emit(f"[下载] 初始下载数量: {download_count} 个作品")
             
             # 步骤 2: 获取作品列表
-            self.progress.emit("[搜索] 正在获取作品列表...")
+            if self.download_mode == "author":
+                # 作者搜索模式：先搜索用户，再获取作品
+                self.progress.emit("[搜索] 正在搜索作者...")
+                users = downloader.search_user(self.query)
+                
+                if not users:
+                    self.finished.emit(False, f"未找到作者: {self.query}")
+                    return
+                
+                # 使用第一个匹配的用户
+                user = users[0]['user']
+                user_id = user['id']
+                user_name = user['name']
+                self.progress.emit(f"[搜索] 找到作者: {user_name} (ID: {user_id})")
+                self.progress.emit(f"[搜索] 正在获取作者的作品...")
+            else:
+                self.progress.emit("[搜索] 正在获取作品列表...")
             
             illust_list = []
             page = 1
@@ -992,6 +1028,8 @@ class WorkThread(QThread):
                 # 获取一页作品
                 if self.download_mode == "search":
                     illusts = downloader.search_illustrations(query=self.query, page=page)
+                elif self.download_mode == "author":
+                    illusts = downloader.get_user_illustrations(user_id, offset=(page-1)*30)
                 else:  # bookmarks mode
                     illusts = downloader.get_user_bookmarks(offset=(page-1)*30)
                 
@@ -1888,10 +1926,16 @@ class PixivDownloaderGUI(QMainWindow):
         
         self.mode_bookmarks_radio = QRadioButton(self.tr("mode_bookmarks", "我的收藏夹"))
         self.mode_bookmarks_radio.setStyleSheet("color: #666; background: transparent;")
+        self.mode_bookmarks_radio.toggled.connect(self.toggle_download_mode)
+        
+        self.mode_author_radio = QRadioButton(self.tr("mode_author", "作者搜索"))
+        self.mode_author_radio.setStyleSheet("color: #666; background: transparent;")
+        self.mode_author_radio.toggled.connect(self.toggle_download_mode)
         
         mode_layout.addWidget(mode_label)
         mode_layout.addWidget(self.mode_search_radio)
         mode_layout.addWidget(self.mode_bookmarks_radio)
+        mode_layout.addWidget(self.mode_author_radio)
         mode_layout.addStretch()
         layout.addLayout(mode_layout)
         
@@ -1905,6 +1949,21 @@ class PixivDownloaderGUI(QMainWindow):
         keyword_layout.addWidget(self.keyword_label)
         keyword_layout.addWidget(self.keyword_input)
         layout.addLayout(keyword_layout)
+        
+        # 作者名（仅在作者搜索模式下显示）
+        author_layout = QHBoxLayout()
+        self.author_label = QLabel(self.tr("author_name", "作者名:"))
+        self.author_label.setFixedWidth(100)
+        self.author_label.setStyleSheet("color: #666; background: transparent;")
+        self.author_input = QLineEdit()
+        self.author_input.setPlaceholderText(self.tr("author_placeholder", "例如: 画师名称"))
+        author_layout.addWidget(self.author_label)
+        author_layout.addWidget(self.author_input)
+        layout.addLayout(author_layout)
+        
+        # 初始隐藏作者输入框
+        self.author_label.setVisible(False)
+        self.author_input.setVisible(False)
         
         # 下载数量和最小收藏数
         numbers_layout = QHBoxLayout()
@@ -2368,10 +2427,26 @@ class PixivDownloaderGUI(QMainWindow):
         self.moderate_options.setVisible(checked)
     
     def toggle_download_mode(self, checked):
-        """切换下载模式时显示/隐藏关键词输入框"""
-        # checked为True表示选中了搜索模式
-        self.keyword_label.setVisible(checked)
-        self.keyword_input.setVisible(checked)
+        """切换下载模式时显示/隐藏输入框"""
+        # 根据选中的模式显示对应的输入框
+        if self.mode_search_radio.isChecked():
+            # 关键词搜索模式
+            self.keyword_label.setVisible(True)
+            self.keyword_input.setVisible(True)
+            self.author_label.setVisible(False)
+            self.author_input.setVisible(False)
+        elif self.mode_author_radio.isChecked():
+            # 作者搜索模式
+            self.keyword_label.setVisible(False)
+            self.keyword_input.setVisible(False)
+            self.author_label.setVisible(True)
+            self.author_input.setVisible(True)
+        else:
+            # 收藏夹模式
+            self.keyword_label.setVisible(False)
+            self.keyword_input.setVisible(False)
+            self.author_label.setVisible(False)
+            self.author_input.setVisible(False)
     
     def show_advanced_filter_dialog(self):
         """显示高级过滤选项对话框"""
@@ -2781,13 +2856,23 @@ class PixivDownloaderGUI(QMainWindow):
     def start_work(self):
         """开始工作"""
         # 获取下载模式
-        download_mode = "search" if self.mode_search_radio.isChecked() else "bookmarks"
+        if self.mode_search_radio.isChecked():
+            download_mode = "search"
+        elif self.mode_author_radio.isChecked():
+            download_mode = "author"
+        else:
+            download_mode = "bookmarks"
         
-        # 如果是搜索模式，检查关键词
+        # 根据模式检查输入
         if download_mode == "search":
             keyword = self.keyword_input.text().strip()
             if not keyword:
                 QMessageBox.warning(self, "提示", "请输入搜索关键词！")
+                return
+        elif download_mode == "author":
+            keyword = self.author_input.text().strip()
+            if not keyword:
+                QMessageBox.warning(self, "提示", "请输入作者名！")
                 return
         else:
             keyword = "my_bookmarks"  # 收藏夹模式使用固定名称
@@ -2802,13 +2887,24 @@ class PixivDownloaderGUI(QMainWindow):
         if download_mode == "search":
             self.log_text.append(f"[任务] 下载模式: 关键词搜索")
             self.log_text.append(f"[任务] 搜索关键词: {keyword}")
+        elif download_mode == "author":
+            self.log_text.append(f"[任务] 下载模式: 作者搜索")
+            self.log_text.append(f"[任务] 作者名: {keyword}")
         else:
             self.log_text.append(f"[任务] 下载模式: 我的收藏夹")
         
         self.log_text.append(f"[任务] 下载数量: {self.count_spin.value()}")
         self.log_text.append(f"[任务] 最小收藏: {self.bookmark_spin.value()}")
         self.log_text.append("=" * 50)
-        self.status_label.setText(f"准备开始: {keyword if download_mode == 'search' else '收藏夹'}")
+        
+        # 设置状态标签
+        if download_mode == "search":
+            status_text = keyword
+        elif download_mode == "author":
+            status_text = f"作者: {keyword}"
+        else:
+            status_text = "收藏夹"
+        self.status_label.setText(f"准备开始: {status_text}")
         self.progress_bar.setRange(0, 0)  # 不确定进度模式
         self.progress_bar.setFormat("处理中...")
         
@@ -2817,9 +2913,6 @@ class PixivDownloaderGUI(QMainWindow):
         if self.enable_moderate_check.isChecked():
             threshold_text = self.threshold_combo.currentText()
             threshold = float(threshold_text.split()[0])
-        
-        # 获取下载模式
-        download_mode = "search" if self.mode_search_radio.isChecked() else "bookmarks"
         
         # 获取自定义标签（从复选框）
         custom_tags = []
