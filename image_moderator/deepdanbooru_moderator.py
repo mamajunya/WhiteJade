@@ -27,7 +27,7 @@ except ImportError as e:
 class DeepDanbooruModerator:
     """DeepDanbooru 图片审核器 - 专门针对动漫图片"""
     
-    def __init__(self, threshold: float = 0.5, model_path: str = None, filter_tags: List[str] = None):
+    def __init__(self, threshold: float = 0.5, model_path: str = None, filter_tags: List[str] = None, ugoira_threshold_offset: float = -0.1):
         """
         初始化审核器
         
@@ -35,6 +35,7 @@ class DeepDanbooruModerator:
             threshold: 检测阈值 (0-1)，标签置信度超过此值才会被识别
             model_path: 模型路径（如果为 None 则使用默认路径）
             filter_tags: 自定义过滤标签列表（如果为 None 则使用默认标签）
+            ugoira_threshold_offset: 动图阈值偏移量，动图审核时会在原阈值基础上增加此值（默认-0.1，更严格）
         """
         print("正在加载 DeepDanbooru 模型...")
         print("（首次运行会自动下载模型，约 600MB，请耐心等待）")
@@ -106,6 +107,7 @@ class DeepDanbooruModerator:
             raise e
         
         self.threshold = threshold
+        self.ugoira_threshold_offset = ugoira_threshold_offset
         
         # 需要过滤的标签
         if filter_tags is not None:
@@ -132,6 +134,154 @@ class DeepDanbooruModerator:
         print("模型加载完成！")
         print(f"当前过滤标签: {', '.join(self.filter_tags)}")
         print(f"标签总数: {len(self.tags)}")
+    
+    def check_ugoira(self, ugoira_dir: str, verbose: bool = True) -> Tuple[bool, dict]:
+        """
+        审核动图（Ugoira）
+        根据阈值动态调整审核帧数比例：
+        - 0.4 (非常严格): 100% 帧数
+        - 0.5 (严格): 90% 帧数
+        - 0.6 (默认): 80% 帧数
+        - 0.7 (宽松): 60% 帧数
+        - 0.8 (非常宽松): 40% 帧数
+        
+        注意：由于Pixiv动图画质较低可能导致误判通过，审核时会在原阈值基础上减少ugoira_threshold_offset（默认-0.1）使审核更严格
+        
+        Args:
+            ugoira_dir: 动图目录路径（包含zip文件）
+            verbose: 是否显示详细信息
+            
+        Returns:
+            (should_keep, result): 是否保留和详细结果
+        """
+        import zipfile
+        import random
+        import tempfile
+        
+        ugoira_path = Path(ugoira_dir)
+        
+        # 查找zip文件
+        zip_files = list(ugoira_path.glob('*_ugoira.zip'))
+        if not zip_files:
+            return True, {'error': '未找到动图zip文件'}
+        
+        zip_file = zip_files[0]
+        
+        # 保存原始阈值
+        original_threshold = self.threshold
+        
+        # 动图使用更严格的阈值（因为画质较低可能导致误判通过）
+        ugoira_threshold = max(0.0, self.threshold + self.ugoira_threshold_offset)
+        self.threshold = ugoira_threshold
+        
+        try:
+            # 解压zip文件获取帧列表
+            with zipfile.ZipFile(zip_file, 'r') as zf:
+                frame_files = sorted([f for f in zf.namelist() if f.lower().endswith(('.jpg', '.png'))])
+                
+                if not frame_files:
+                    return True, {'error': '动图中没有找到图片帧'}
+                
+                total_frames = len(frame_files)
+                
+                # 根据原始阈值确定审核帧数比例
+                if original_threshold <= 0.4:
+                    # 非常严格：100% 帧数
+                    check_ratio = 1.0
+                elif original_threshold <= 0.5:
+                    # 严格：90% 帧数
+                    check_ratio = 0.9
+                elif original_threshold <= 0.6:
+                    # 默认：80% 帧数
+                    check_ratio = 0.8
+                elif original_threshold <= 0.7:
+                    # 宽松：60% 帧数
+                    check_ratio = 0.6
+                else:
+                    # 非常宽松：40% 帧数
+                    check_ratio = 0.4
+                
+                # 计算需要审核的帧数（至少2帧）
+                frames_to_check_count = max(2, int(total_frames * check_ratio))
+                
+                # 均匀分布选择帧
+                if frames_to_check_count >= total_frames:
+                    # 审核所有帧
+                    selected_indices = list(range(total_frames))
+                else:
+                    # 均匀分布选择帧
+                    step = total_frames / frames_to_check_count
+                    selected_indices = [int(i * step) for i in range(frames_to_check_count)]
+                
+                selected_frames = [frame_files[i] for i in selected_indices]
+                
+                if verbose:
+                    print(f"  动图共 {total_frames} 帧")
+                    print(f"  审核比例: {check_ratio*100:.0f}% ({frames_to_check_count} 帧)")
+                    print(f"  动图阈值: {ugoira_threshold:.2f} (原始: {original_threshold:.2f}, 偏移: {self.ugoira_threshold_offset:+.2f})")
+                    print(f"  抽取帧: {', '.join([f'#{i}' for i in selected_indices[:5]])}{'...' if len(selected_indices) > 5 else ''}")
+                
+                # 创建临时目录
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    temp_path = Path(temp_dir)
+                    
+                    # 提取并审核选中的帧
+                    all_results = []
+                    failed_frames = []
+                    
+                    for frame_name in selected_frames:
+                        # 提取帧到临时目录
+                        frame_data = zf.read(frame_name)
+                        temp_frame = temp_path / frame_name
+                        temp_frame.write_bytes(frame_data)
+                        
+                        # 审核这一帧
+                        should_keep, result = self.check_image(str(temp_frame), verbose=False)
+                        all_results.append((should_keep, result, frame_name))
+                        
+                        if not should_keep:
+                            failed_frames.append(frame_name)
+                            if verbose:
+                                print(f"    {frame_name}: ✗ 不通过 - {result['reason']}")
+                        elif verbose:
+                            print(f"    {frame_name}: ✓ 通过")
+                        
+                        # 如果有一帧不通过，整个动图不通过
+                        if not should_keep:
+                            # 恢复原始阈值
+                            self.threshold = original_threshold
+                            return False, {
+                                'frame': frame_name,
+                                'reason': f"动图帧 {frame_name} 未通过审核: {result['reason']}",
+                                'filtered_tags': result.get('filtered_tags', {}),
+                                'all_tags': result.get('all_tags', {}),
+                                'frames_checked': len(all_results),
+                                'total_frames': total_frames,
+                                'check_ratio': check_ratio,
+                                'ugoira_threshold': ugoira_threshold,
+                                'original_threshold': original_threshold
+                            }
+                    
+                    # 恢复原始阈值
+                    self.threshold = original_threshold
+                    
+                    # 所有帧都通过
+                    return True, {
+                        'reason': '动图审核通过',
+                        'frames_checked': frames_to_check_count,
+                        'total_frames': total_frames,
+                        'check_ratio': check_ratio,
+                        'ugoira_threshold': ugoira_threshold,
+                        'original_threshold': original_threshold
+                    }
+                    
+        except Exception as e:
+            # 恢复原始阈值
+            self.threshold = original_threshold
+            import traceback
+            error_msg = f"{str(e)}\n{traceback.format_exc()}"
+            print(f"审核动图时出错: {error_msg}")
+            return True, {'error': error_msg}
     
     def check_image(self, image_path: str, verbose: bool = False) -> Tuple[bool, dict]:
         """
@@ -248,30 +398,45 @@ class DeepDanbooruModerator:
         # 支持的图片格式
         image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp'}
         
-        # 获取所有图片文件
-        image_files = [
-            f for f in input_path.rglob('*') 
-            if f.is_file() and f.suffix.lower() in image_extensions
-        ]
+        # 获取所有图片文件和动图目录
+        image_files = []
+        ugoira_dirs = []
         
-        if not image_files:
-            print(f"在 {input_dir} 中没有找到图片文件")
+        for item in input_path.iterdir():
+            if item.is_file() and item.suffix.lower() in image_extensions:
+                image_files.append(item)
+            elif item.is_dir() and item.name.endswith('_ugoira'):
+                # 动图目录
+                ugoira_dirs.append(item)
+            elif item.is_dir():
+                # 检查子目录中的图片（漫画目录）
+                for subitem in item.rglob('*'):
+                    if subitem.is_file() and subitem.suffix.lower() in image_extensions:
+                        image_files.append(subitem)
+        
+        total_items = len(image_files) + len(ugoira_dirs)
+        
+        if total_items == 0:
+            print(f"在 {input_dir} 中没有找到图片文件或动图")
             return {}
         
-        print(f"\n找到 {len(image_files)} 张图片，开始审核...\n")
+        print(f"\n找到 {len(image_files)} 张图片和 {len(ugoira_dirs)} 个动图，开始审核...\n")
         
         stats = {
-            'total': len(image_files),
+            'total': total_items,
             'kept': 0,
             'filtered': 0,
             'errors': 0
         }
         
         filtered_list = []
+        current_idx = 0
         
-        for idx, image_file in enumerate(image_files, 1):
+        # 处理图片文件
+        for image_file in image_files:
+            current_idx += 1
             if verbose:
-                print(f"[{idx}/{len(image_files)}] 处理: {image_file.name}")
+                print(f"[{current_idx}/{total_items}] 处理图片: {image_file.name}")
             
             should_keep, result = self.check_image(str(image_file), verbose=False)
             
@@ -322,6 +487,58 @@ class DeepDanbooruModerator:
                     else:
                         # 复制文件
                         shutil.copy2(image_file, ban_file)
+                        if verbose:
+                            print(f"    已复制到 ban 目录")
+                except Exception as e:
+                    print(f"    移动/复制到 ban 目录失败: {e}")
+        
+        # 处理动图目录
+        for ugoira_dir in ugoira_dirs:
+            current_idx += 1
+            if verbose:
+                print(f"[{current_idx}/{total_items}] 处理动图: {ugoira_dir.name}")
+            
+            should_keep, result = self.check_ugoira(str(ugoira_dir), verbose=verbose)
+            
+            if 'error' in result:
+                stats['errors'] += 1
+                if verbose:
+                    print(f"  ✗ 错误: {result['error'][:50]}...")
+                continue
+            
+            if should_keep:
+                stats['kept'] += 1
+                if verbose:
+                    print(f"  ✓ 保留 - {result['reason']}")
+                
+                # 如果指定了输出目录，复制整个目录
+                if output_dir:
+                    output_path = Path(output_dir)
+                    output_path.mkdir(parents=True, exist_ok=True)
+                    
+                    relative_path = ugoira_dir.relative_to(input_path)
+                    dest_dir = output_path / relative_path
+                    
+                    shutil.copytree(ugoira_dir, dest_dir, dirs_exist_ok=True)
+            else:
+                stats['filtered'] += 1
+                filtered_list.append(str(ugoira_dir))
+                if verbose:
+                    print(f"  ✗ 过滤 - {result['reason']}")
+                
+                # 移动到 ban 目录
+                try:
+                    relative_path = ugoira_dir.relative_to(input_path)
+                    ban_dir_path = ban_path / relative_path
+                    
+                    if delete_filtered:
+                        # 移动整个目录
+                        shutil.move(str(ugoira_dir), str(ban_dir_path))
+                        if verbose:
+                            print(f"    已移动到 ban 目录")
+                    else:
+                        # 复制整个目录
+                        shutil.copytree(ugoira_dir, ban_dir_path, dirs_exist_ok=True)
                         if verbose:
                             print(f"    已复制到 ban 目录")
                 except Exception as e:

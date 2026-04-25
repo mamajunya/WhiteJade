@@ -436,10 +436,44 @@ class PixivDownloader:
                     time.sleep(0.5)  # 避免请求过快
                         
             elif illust['type'] == 'ugoira':
-                # 动图
-                print(f"动图作品: {title} (ID: {illust_id}) - 暂不支持下载动图")
-                self.stats['total_skipped'] += 1
-                return False
+                # 动图（Ugoira）
+                print(f"下载动图: {title} (ID: {illust_id})")
+                
+                try:
+                    # 获取动图元数据
+                    ugoira_metadata = self.api.ugoira_metadata(illust_id)
+                    if not ugoira_metadata or 'ugoira_metadata' not in ugoira_metadata:
+                        print(f"  无法获取动图元数据")
+                        self.stats['total_skipped'] += 1
+                        return False
+                    
+                    # 获取zip文件URL
+                    zip_url = ugoira_metadata['ugoira_metadata']['zip_urls']['medium']
+                    
+                    # 创建动图目录
+                    ugoira_dir = os.path.join(target_dir, f"{illust_id}_{safe_title}_ugoira")
+                    os.makedirs(ugoira_dir, exist_ok=True)
+                    
+                    # 下载zip文件
+                    zip_filename = f"{illust_id}_ugoira.zip"
+                    zip_filepath = os.path.join(ugoira_dir, zip_filename)
+                    
+                    if not os.path.exists(zip_filepath):
+                        self.api.download(zip_url, path=ugoira_dir, name=zip_filename)
+                        print(f"  ✓ 已下载动图文件: {zip_filename}")
+                    else:
+                        print(f"  已存在: {zip_filename}")
+                    
+                    # 保存帧延迟信息
+                    frames_info = ugoira_metadata['ugoira_metadata']['frames']
+                    frames_file = os.path.join(ugoira_dir, 'frames.json')
+                    with open(frames_file, 'w', encoding='utf-8') as f:
+                        json.dump(frames_info, f, ensure_ascii=False, indent=2)
+                    
+                except Exception as e:
+                    print(f"  下载动图失败: {e}")
+                    self.stats['total_failed'] += 1
+                    return False
             else:
                 print(f"未知作品类型: {illust['type']}")
                 self.stats['total_skipped'] += 1

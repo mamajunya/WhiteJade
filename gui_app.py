@@ -8,6 +8,9 @@ Pixiv 下载器 + 图片审核工具 - GUI 版本
 import sys
 import os
 import json
+import time
+import threading
+import queue
 from pathlib import Path
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -59,6 +62,8 @@ TRANSLATIONS = {
         "min_bookmarks": "最小收藏:",
         "skip_r18": "跳过 R-18 内容",
         "skip_ai": "去除 AI 作品",
+        "skip_ugoira": "跳过动图",
+        "only_ugoira": "只下载动图",
         "moderate_settings": "🔍 审核设置",
         "enable_moderate": "启用图片审核（下载完成后自动审核）",
         "detection_threshold": "检测阈值:",
@@ -117,6 +122,12 @@ TRANSLATIONS = {
         "exit_directly": "直接退出",
         "minimize_to_tray_option": "最小化到托盘",
         "close_behavior_changed": "关闭行为已更改",
+        "download_threads": "下载线程数:",
+        "download_threads_hint": "同时下载的作品数量（1-10）",
+        "ugoira_format": "动图格式:",
+        "ugoira_format_hint": "动图自动转换格式",
+        "enable_debug_log": "启用调试日志",
+        "debug_log_hint": "记录详细的审核过程和数值",
     },
     "ja_JP": {
         "app_title": "WhiteJade",
@@ -142,6 +153,8 @@ TRANSLATIONS = {
         "min_bookmarks": "最小ブックマーク:",
         "skip_r18": "R-18 コンテンツをスキップ",
         "skip_ai": "AI 作品を除外",
+        "skip_ugoira": "動画をスキップ",
+        "only_ugoira": "動画のみダウンロード",
         "moderate_settings": "🔍 審査設定",
         "enable_moderate": "画像審査を有効にする（ダウンロード後に自動審査）",
         "detection_threshold": "検出しきい値:",
@@ -198,6 +211,12 @@ TRANSLATIONS = {
         "exit_directly": "直接終了",
         "minimize_to_tray_option": "トレイに最小化",
         "close_behavior_changed": "閉じる動作が変更されました",
+        "download_threads": "ダウンロードスレッド数:",
+        "download_threads_hint": "同時にダウンロードする作品数（1-10）",
+        "ugoira_format": "動画形式:",
+        "ugoira_format_hint": "動画自動変換形式",
+        "enable_debug_log": "デバッグログを有効化",
+        "debug_log_hint": "詳細な審査プロセスと数値を記録",
     },
     "ko_KR": {
         "app_title": "WhiteJade",
@@ -223,6 +242,8 @@ TRANSLATIONS = {
         "min_bookmarks": "최소 북마크:",
         "skip_r18": "R-18 콘텐츠 건너뛰기",
         "skip_ai": "AI 작품 제외",
+        "skip_ugoira": "동영상 건너뛰기",
+        "only_ugoira": "동영상만 다운로드",
         "moderate_settings": "🔍 심사 설정",
         "enable_moderate": "이미지 심사 활성화（다운로드 후 자동 심사）",
         "detection_threshold": "감지 임계값:",
@@ -279,6 +300,12 @@ TRANSLATIONS = {
         "exit_directly": "직접 종료",
         "minimize_to_tray_option": "트레이로 최소화",
         "close_behavior_changed": "닫기 동작이 변경되었습니다",
+        "download_threads": "다운로드 스레드 수:",
+        "download_threads_hint": "동시에 다운로드할 작품 수（1-10）",
+        "ugoira_format": "동영상 형식:",
+        "ugoira_format_hint": "동영상 자동 변환 형식",
+        "enable_debug_log": "디버그 로그 활성화",
+        "debug_log_hint": "상세한 심사 과정과 수치 기록",
     },
     "en_US": {
         "app_title": "WhiteJade",
@@ -304,6 +331,8 @@ TRANSLATIONS = {
         "min_bookmarks": "Min Bookmarks:",
         "skip_r18": "Skip R-18 Content",
         "skip_ai": "Skip AI Artworks",
+        "skip_ugoira": "Skip Animations",
+        "only_ugoira": "Only Animations",
         "moderate_settings": "🔍 Moderation Settings",
         "enable_moderate": "Enable Image Moderation (Auto-moderate after download)",
         "detection_threshold": "Detection Threshold:",
@@ -360,6 +389,12 @@ TRANSLATIONS = {
         "exit_directly": "Exit directly",
         "minimize_to_tray_option": "Minimize to tray",
         "close_behavior_changed": "Close behavior changed",
+        "download_threads": "Download Threads:",
+        "download_threads_hint": "Number of concurrent downloads (1-10)",
+        "ugoira_format": "Animation Format:",
+        "ugoira_format_hint": "Auto-convert animation format",
+        "enable_debug_log": "Enable Debug Log",
+        "debug_log_hint": "Record detailed moderation process and values",
     },
     "fr_FR": {
         "app_title": "WhiteJade",
@@ -385,6 +420,8 @@ TRANSLATIONS = {
         "min_bookmarks": "Signets minimum:",
         "skip_r18": "Ignorer le contenu R-18",
         "skip_ai": "Exclure les œuvres IA",
+        "skip_ugoira": "Ignorer les animations",
+        "only_ugoira": "Animations uniquement",
         "moderate_settings": "🔍 Paramètres de modération",
         "enable_moderate": "Activer la modération d'image (Modération automatique après téléchargement)",
         "detection_threshold": "Seuil de détection:",
@@ -441,6 +478,12 @@ TRANSLATIONS = {
         "exit_directly": "Quitter directement",
         "minimize_to_tray_option": "Réduire dans la barre",
         "close_behavior_changed": "Comportement de fermeture modifié",
+        "download_threads": "Threads de téléchargement:",
+        "download_threads_hint": "Nombre de téléchargements simultanés (1-10)",
+        "ugoira_format": "Format d'animation:",
+        "ugoira_format_hint": "Format de conversion automatique",
+        "enable_debug_log": "Activer le journal de débogage",
+        "debug_log_hint": "Enregistrer le processus détaillé et les valeurs",
     },
     "de_DE": {
         "app_title": "WhiteJade",
@@ -467,6 +510,8 @@ TRANSLATIONS = {
         "min_bookmarks": "Min. Lesezeichen:",
         "skip_r18": "R-18-Inhalte überspringen",
         "skip_ai": "KI-Kunstwerke ausschließen",
+        "skip_ugoira": "Animationen überspringen",
+        "only_ugoira": "Nur Animationen",
         "moderate_settings": "🔍 Moderationseinstellungen",
         "enable_moderate": "Bildmoderation aktivieren (Automatische Moderation nach Download)",
         "detection_threshold": "Erkennungsschwelle:",
@@ -523,32 +568,85 @@ TRANSLATIONS = {
         "exit_directly": "Direkt beenden",
         "minimize_to_tray_option": "In Taskleiste minimieren",
         "close_behavior_changed": "Schließverhalten geändert",
+        "download_threads": "Download-Threads:",
+        "download_threads_hint": "Anzahl gleichzeitiger Downloads (1-10)",
+        "ugoira_format": "Animationsformat:",
+        "ugoira_format_hint": "Automatisches Konvertierungsformat",
+        "enable_debug_log": "Debug-Protokoll aktivieren",
+        "debug_log_hint": "Detaillierten Prozess und Werte aufzeichnen",
     },
 }
 
 
 class WorkThread(QThread):
-    """工作线程 - 处理下载和审核"""
+    """工作线程 - 处理下载和审核（支持多线程下载和并行审核）"""
     progress = pyqtSignal(str)
     finished = pyqtSignal(bool, str)
     
     def __init__(self, query, max_count, min_bookmarks, skip_r18, skip_ai,
                  enable_moderate, threshold, delete_filtered, download_folder="downloads",
-                 download_mode="search", custom_tags=None):
+                 download_mode="search", custom_tags=None, download_threads=3,
+                 skip_ugoira=False, only_ugoira=False, debug_log=False):
         super().__init__()
         self.query = query
         self.max_count = max_count
         self.min_bookmarks = min_bookmarks
         self.skip_r18 = skip_r18
         self.skip_ai = skip_ai
+        self.skip_ugoira = skip_ugoira
+        self.only_ugoira = only_ugoira
         self.enable_moderate = enable_moderate
+        self.debug_log = debug_log
         self.threshold = threshold
         self.delete_filtered = delete_filtered
         self.download_folder = download_folder
         self.download_mode = download_mode  # "search" 或 "bookmarks"
         self.custom_tags = custom_tags if custom_tags else ["penis", "sex"]  # 自定义过滤标签
+        self.download_threads = download_threads  # 下载线程数
         self._is_paused = False
         self._is_stopped = False
+        
+        # 用于多线程下载和审核的队列
+        import queue
+        self.download_queue = queue.Queue()  # 待下载队列
+        self.moderate_queue = queue.Queue()  # 待审核队列
+        self.download_lock = threading.Lock()  # 下载统计锁
+        self.moderate_lock = threading.Lock()  # 审核统计锁
+        
+        # 统计信息
+        self.downloaded_count = 0
+        self.moderated_count = 0
+        self.kept_count = 0
+        self.filtered_count = 0
+        
+        # 日志文件
+        self.log_file = None
+        if self.debug_log:
+            # 创建日志目录
+            log_dir = Path(self.download_folder) / "logs"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            
+            # 生成日志文件名（带时间戳）
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_query = "".join(c for c in self.query if c.isalnum() or c in (' ', '-', '_'))[:30]
+            log_filename = f"debug_{safe_query}_{timestamp}.log"
+            self.log_file_path = log_dir / log_filename
+            
+            try:
+                self.log_file = open(self.log_file_path, 'w', encoding='utf-8')
+                self.write_log(f"=== WhiteJade 调试日志 ===")
+                self.write_log(f"时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                self.write_log(f"关键词: {self.query}")
+                self.write_log(f"目标数量: {self.max_count}")
+                self.write_log(f"阈值: {self.threshold}")
+                self.write_log(f"过滤标签: {', '.join(self.custom_tags)}")
+                self.write_log(f"下载线程数: {self.download_threads}")
+                self.write_log(f"=" * 50)
+                self.write_log("")
+            except Exception as e:
+                print(f"创建日志文件失败: {e}")
+                self.log_file = None
     
     def pause(self):
         """暂停线程"""
@@ -569,10 +667,268 @@ class WorkThread(QThread):
             self.msleep(100)  # 暂停时每100ms检查一次
         return self._is_stopped
     
+    def write_log(self, message):
+        """写入日志到文件和GUI"""
+        # 发送到GUI
+        self.progress.emit(message)
+        
+        # 写入文件
+        if self.log_file:
+            try:
+                self.log_file.write(message + '\n')
+                self.log_file.flush()  # 立即刷新到磁盘
+            except Exception as e:
+                print(f"写入日志失败: {e}")
+    
+    def close_log(self):
+        """关闭日志文件"""
+        if self.log_file:
+            try:
+                from datetime import datetime
+                self.log_file.write(f"\n{'='*50}\n")
+                self.log_file.write(f"日志结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                self.log_file.close()
+                self.log_file = None
+            except Exception as e:
+                print(f"关闭日志文件失败: {e}")
+    
+    def download_worker(self, downloader, illust_list):
+        """下载工作线程"""
+        import time
+        
+        while not self._is_stopped:
+            try:
+                # 从队列获取作品信息
+                if not illust_list:
+                    break
+                
+                with self.download_lock:
+                    if not illust_list:
+                        break
+                    illust = illust_list.pop(0)
+                
+                # 下载作品
+                try:
+                    full_illust = downloader.get_illustration_details(illust['id'])
+                    if full_illust and downloader.download_illustration(full_illust, project_name=self.query):
+                        with self.download_lock:
+                            self.downloaded_count += 1
+                        
+                        # 将下载完成的作品放入审核队列
+                        if self.enable_moderate:
+                            self.moderate_queue.put(illust['id'])
+                        else:
+                            with self.moderate_lock:
+                                self.kept_count += 1
+                        
+                        self.progress.emit(f"[下载] 已下载: {self.downloaded_count} 个作品")
+                except Exception as e:
+                    self.progress.emit(f"[下载] 下载失败 ID {illust['id']}: {str(e)}")
+                
+                time.sleep(0.5)  # 避免请求过快
+                
+            except Exception as e:
+                self.progress.emit(f"[下载] 工作线程错误: {str(e)}")
+                break
+    
+    def moderate_worker(self, moderator, picture_dir):
+        """审核工作线程"""
+        from pathlib import Path
+        import shutil
+        
+        while not self._is_stopped:
+            try:
+                # 从队列获取待审核的作品ID
+                try:
+                    illust_id = self.moderate_queue.get(timeout=2)
+                except:
+                    # 队列为空，检查下载是否完成
+                    # 如果所有下载线程都已完成且队列为空，退出
+                    continue
+                
+                # 等待文件写入完成
+                time.sleep(0.5)
+                
+                # 查找该作品的文件
+                illust_files = []
+                ugoira_dirs = []
+                
+                for item in picture_dir.iterdir():
+                    if item.is_file() and str(illust_id) in item.name:
+                        illust_files.append(item)
+                    elif item.is_dir() and str(illust_id) in item.name:
+                        if item.name.endswith('_ugoira'):
+                            ugoira_dirs.append(item)
+                        else:
+                            # 漫画目录
+                            illust_files.extend([f for f in item.iterdir() if f.is_file()])
+                
+                # 如果没找到文件，可能还在下载中，放回队列
+                if not illust_files and not ugoira_dirs:
+                    self.moderate_queue.put(illust_id)
+                    time.sleep(1)
+                    continue
+                
+                # 审核文件
+                should_keep = True
+                reason = ""
+                
+                # 审核动图
+                for ugoira_dir in ugoira_dirs:
+                    keep, result = moderator.check_ugoira(str(ugoira_dir), verbose=self.debug_log)
+                    if not keep:
+                        should_keep = False
+                        reason = result.get('reason', '未通过审核')
+                    
+                    # 输出详细调试日志
+                    if self.debug_log:
+                        self.write_log(f"[调试] 动图 {ugoira_dir.name}:")
+                        self.write_log(f"  - 状态: {'✗ 不通过' if not keep else '✓ 通过'}")
+                        self.write_log(f"  - 总帧数: {result.get('total_frames', 'N/A')}")
+                        self.write_log(f"  - 审核帧数: {result.get('frames_checked', 'N/A')}")
+                        self.write_log(f"  - 审核比例: {result.get('check_ratio', 0)*100:.0f}%")
+                        self.write_log(f"  - 原始阈值: {result.get('original_threshold', 'N/A')}")
+                        self.write_log(f"  - 动图阈值: {result.get('ugoira_threshold', 'N/A')}")
+                        
+                        if not keep:
+                            filtered_tags = result.get('filtered_tags', {})
+                            if filtered_tags:
+                                self.write_log(f"  - 过滤标签:")
+                                for tag, score in sorted(filtered_tags.items(), key=lambda x: x[1], reverse=True):
+                                    self.write_log(f"    • {tag}: {score:.2%}")
+                            self.write_log(f"  - 失败帧: {result.get('frame', 'N/A')}")
+                        
+                        self.write_log("")  # 空行分隔
+                    
+                    if not keep:
+                        break
+                
+                # 审核图片
+                if should_keep:
+                    for img_file in illust_files:
+                        keep, result = moderator.check_image(str(img_file), verbose=self.debug_log)
+                        if not keep:
+                            should_keep = False
+                            reason = result.get('reason', '未通过审核')
+                            break
+                        
+                        # 输出详细调试日志
+                        if self.debug_log:
+                            all_tags = result.get('all_tags', {})
+                            filtered_tags = result.get('filtered_tags', {})
+                            
+                            self.write_log(f"[调试] 图片 {img_file.name}:")
+                            self.write_log(f"  - 状态: {'✗ 不通过' if not keep else '✓ 通过'}")
+                            self.write_log(f"  - 检测到的标签总数: {len(all_tags)} 个")
+                            self.write_log(f"  - 当前阈值: {moderator.threshold:.2f}")
+                            
+                            # 显示过滤标签的检测结果（无论是否超过阈值）
+                            filter_tag_results = {}
+                            for tag in self.custom_tags:
+                                if tag in all_tags:
+                                    filter_tag_results[tag] = all_tags[tag]
+                            
+                            if filter_tag_results:
+                                self.write_log(f"  - 过滤标签检测结果:")
+                                for tag, score in sorted(filter_tag_results.items(), key=lambda x: x[1], reverse=True):
+                                    status = "超过阈值 ✗" if tag in filtered_tags else "未超过阈值 ✓"
+                                    self.write_log(f"    • {tag}: {score:.2%} ({status})")
+                            else:
+                                self.write_log(f"  - 过滤标签检测结果: 未检测到任何过滤标签")
+                            
+                            # 显示所有检测到的标签（按置信度排序，只显示前10个）
+                            if all_tags:
+                                self.write_log(f"  - 检测到的标签 (前10个，按置信度排序):")
+                                sorted_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)[:10]
+                                for tag, score in sorted_tags:
+                                    marker = "⚠" if tag in filtered_tags else " "
+                                    self.write_log(f"    {marker} {tag}: {score:.2%}")
+                            
+                            self.write_log("")  # 空行分隔
+                
+                # 处理审核结果
+                with self.moderate_lock:
+                    self.moderated_count += 1
+                    
+                    if should_keep:
+                        self.kept_count += 1
+                        self.progress.emit(f"[审核] ✓ 保留 ID {illust_id} ({self.kept_count}/{self.moderated_count})")
+                        
+                        # 转换 ugoira 为 GIF/MP4
+                        if ugoira_dirs:
+                            try:
+                                from image_moderator.ugoira_converter import UgoiraConverter
+                                
+                                # 获取转换格式设置
+                                config_path = "pixiv_downloader/config.json"
+                                with open(config_path, 'r', encoding='utf-8') as f:
+                                    config = json.load(f)
+                                ugoira_format = config.get('ugoira_format', 'gif')
+                                
+                                converter = UgoiraConverter(output_format=ugoira_format)
+                                
+                                for ugoira_dir in ugoira_dirs:
+                                    self.progress.emit(f"[转换] 正在转换动图 ID {illust_id} 为 {ugoira_format.upper()}...")
+                                    success, message = converter.convert_ugoira(str(ugoira_dir), delete_source=True)
+                                    
+                                    if success:
+                                        # 转换成功，将输出文件移动到picture目录
+                                        output_file = Path(message)
+                                        if output_file.exists():
+                                            # 移动到picture目录
+                                            dest_file = picture_dir / output_file.name
+                                            shutil.move(str(output_file), str(dest_file))
+                                            self.progress.emit(f"[转换] ✓ 转换成功: {output_file.name}")
+                                            
+                                            # 删除 ugoira 目录
+                                            if ugoira_dir.exists():
+                                                shutil.rmtree(ugoira_dir)
+                                        else:
+                                            self.progress.emit(f"[转换] ✗ 输出文件不存在: {message}")
+                                    else:
+                                        self.progress.emit(f"[转换] ✗ 转换失败: {message}")
+                            except Exception as e:
+                                self.progress.emit(f"[转换] 转换错误: {str(e)}")
+                    else:
+                        self.filtered_count += 1
+                        self.progress.emit(f"[审核] ✗ 过滤 ID {illust_id}: {reason} ({self.filtered_count}/{self.moderated_count})")
+                        
+                        # 移动到ban目录
+                        ban_dir = picture_dir.parent / 'ban'
+                        ban_dir.mkdir(exist_ok=True)
+                        
+                        for ugoira_dir in ugoira_dirs:
+                            dest = ban_dir / ugoira_dir.name
+                            try:
+                                if self.delete_filtered:
+                                    shutil.move(str(ugoira_dir), str(dest))
+                                else:
+                                    shutil.copytree(ugoira_dir, dest, dirs_exist_ok=True)
+                            except Exception as e:
+                                self.progress.emit(f"[审核] 移动文件失败: {e}")
+                        
+                        for img_file in illust_files:
+                            dest = ban_dir / img_file.name
+                            try:
+                                if self.delete_filtered:
+                                    shutil.move(str(img_file), str(dest))
+                                else:
+                                    shutil.copy2(img_file, dest)
+                            except Exception as e:
+                                self.progress.emit(f"[审核] 移动文件失败: {e}")
+                
+                self.moderate_queue.task_done()
+                
+            except Exception as e:
+                self.progress.emit(f"[审核] 工作线程错误: {str(e)}")
+                continue
+    
     def run(self):
         try:
-            # 步骤 1: 下载
+            # 步骤 1: 初始化
             from pixiv_downloader import PixivDownloader
+            from pathlib import Path
+            import threading
             
             if self.check_pause():
                 self.finished.emit(False, "任务已停止")
@@ -603,14 +959,15 @@ class WorkThread(QThread):
                 self.progress.emit(f"[下载] 开始下载收藏夹作品")
             
             self.progress.emit(f"[下载] 目标保留数量: {self.max_count} 张图片")
+            self.progress.emit(f"[下载] 下载线程数: {self.download_threads}")
             self.progress.emit(f"[下载] 最小收藏数: {self.min_bookmarks}")
             self.progress.emit(f"[下载] 跳过 R-18: {'是' if self.skip_r18 else '否'}")
             self.progress.emit(f"[下载] 跳过 AI 作品: {'是' if self.skip_ai else '否'}")
             
             if self.enable_moderate:
-                self.progress.emit(f"[下载] 启用审核模式: 将下载更多图片以确保最终保留 {self.max_count} 张")
-                # 如果启用审核，下载 1.5 倍数量
-                download_count = int(self.max_count * 1.5)
+                self.progress.emit(f"[下载] 启用审核模式: 下载和审核将同时进行")
+                # 如果启用审核，下载 2 倍数量以确保足够
+                download_count = int(self.max_count * 2)
             else:
                 download_count = self.max_count
             
@@ -620,206 +977,206 @@ class WorkThread(QThread):
             
             self.progress.emit(f"[下载] 初始下载数量: {download_count} 个作品")
             
-            # 启动一个定时器来监控下载进度
-            import threading
-            last_downloaded = 0
-            monitor_running = True
+            # 步骤 2: 获取作品列表
+            self.progress.emit("[搜索] 正在获取作品列表...")
             
-            def monitor_progress():
-                nonlocal last_downloaded
-                while monitor_running and not self._is_stopped:
-                    current = downloader.stats.get('total_downloaded', 0)
-                    if current > last_downloaded:
-                        self.progress.emit(f"[下载] 进度: {current}/{download_count} 个作品")
-                        last_downloaded = current
-                    threading.Event().wait(2)  # 每2秒检查一次
+            illust_list = []
+            page = 1
+            max_pages = 20  # 最多搜索20页
             
-            monitor_thread = threading.Thread(target=monitor_progress, daemon=True)
-            monitor_thread.start()
+            while len(illust_list) < download_count and page <= max_pages:
+                if self._is_stopped:
+                    self.finished.emit(False, "任务已停止")
+                    return
+                
+                # 获取一页作品
+                if self.download_mode == "search":
+                    illusts = downloader.search_illustrations(query=self.query, page=page)
+                else:  # bookmarks mode
+                    illusts = downloader.get_user_bookmarks(offset=(page-1)*30)
+                
+                if not illusts:
+                    self.progress.emit(f"[搜索] 第 {page} 页没有更多作品")
+                    break
+                
+                # 筛选作品
+                for illust in illusts:
+                    if len(illust_list) >= download_count:
+                        break
+                    
+                    # 跳过R-18作品（可选）
+                    if self.skip_r18 and illust.get('x_restrict', 0) > 0:
+                        continue
+                    
+                    # 跳过AI作品（可选）
+                    if self.skip_ai and illust.get('illust_ai_type', 0) == 2:
+                        continue
+                    
+                    # 动图过滤
+                    is_ugoira = illust.get('type') == 'ugoira'
+                    if self.skip_ugoira and is_ugoira:
+                        continue
+                    if self.only_ugoira and not is_ugoira:
+                        continue
+                    
+                    # 收藏数过滤
+                    if illust.get('total_bookmarks', 0) < self.min_bookmarks:
+                        continue
+                    
+                    # 跳过已下载的作品
+                    if illust['id'] in downloader.downloaded_ids:
+                        continue
+                    
+                    illust_list.append(illust)
+                
+                self.progress.emit(f"[搜索] 已找到 {len(illust_list)} 个符合条件的作品...")
+                page += 1
+                time.sleep(1)  # 避免请求过快
             
-            # 根据下载模式选择不同的下载方法
-            if self.download_mode == "search":
-                count = downloader.download_by_query(
-                    query=self.query,
-                    max_count=download_count,
-                    skip_r18=self.skip_r18,
-                    skip_ai=self.skip_ai,
-                    min_bookmarks=self.min_bookmarks
-                )
-            else:  # bookmarks mode
-                count = downloader.download_from_bookmarks(
-                    max_count=download_count,
-                    skip_r18=self.skip_r18,
-                    skip_ai=self.skip_ai,
-                    min_bookmarks=self.min_bookmarks
-                )
-            
-            monitor_running = False  # 停止监控线程
-            
-            if self._is_stopped:
-                self.finished.emit(False, "任务已停止")
+            if not illust_list:
+                self.finished.emit(False, "未找到符合条件的作品")
                 return
             
-            if count == 0:
-                self.finished.emit(False, "未下载到任何图片，请尝试更换关键词或降低筛选条件")
-                return
+            self.progress.emit(f"[搜索] 找到 {len(illust_list)} 个作品，开始下载...")
             
-            self.progress.emit(f"[下载] 下载完成，成功下载 {count} 个作品")
+            # 步骤 3: 启动审核线程（如果启用）
+            moderator = None
+            moderate_thread = None
             
-            # 步骤 2: 审核（如果启用）
             if self.enable_moderate:
-                if self.check_pause():
-                    self.finished.emit(False, "任务已停止")
-                    return
-                
-                self.progress.emit("[审核] 开始图片内容审核...")
-                
-                # 使用 DeepDanbooru 审核器（专门针对动漫图片）
-                from image_moderator.deepdanbooru_moderator import DeepDanbooruModerator
-                
-                # 清理项目名称
-                safe_name = "".join(c for c in self.query if c.isalnum() or c in (' ', '-', '_', '。', '！', '？')).strip()
-                if len(safe_name) > 50:
-                    safe_name = safe_name[:50]
-                
-                picture_dir = Path(self.download_folder) / safe_name / "picture"
-                
-                if not picture_dir.exists():
-                    self.finished.emit(False, "图片目录不存在")
-                    return
-                
-                if self.check_pause():
-                    self.finished.emit(False, "任务已停止")
-                    return
-                
                 self.progress.emit("[审核] 正在加载 DeepDanbooru AI 模型...")
                 self.progress.emit("[审核] 提示: 模型加载需要约 10-30 秒，请耐心等待")
                 self.progress.emit(f"[审核] 检测阈值: {self.threshold} (阈值越低越严格)")
                 
-                # 在单独的线程中加载模型，避免阻塞 GUI
                 try:
                     self.progress.emit("[审核] 步骤 1/3: 导入 DeepDanbooru 模块...")
                     from image_moderator.deepdanbooru_moderator import DeepDanbooruModerator
                     
                     self.progress.emit("[审核] 步骤 2/3: 初始化模型...")
-                    # DeepDanbooru 阈值：GUI 的 0.4-0.8 直接对应模型的 0.4-0.8
-                    # 0.4 -> 非常严格（推荐用于打码内容）
-                    # 0.5 -> 严格
-                    # 0.6 -> 默认（推荐）
-                    # 0.7 -> 宽松
-                    # 0.8 -> 非常宽松
                     moderator = DeepDanbooruModerator(
                         threshold=self.threshold,
-                        filter_tags=self.custom_tags  # 使用自定义标签
+                        filter_tags=self.custom_tags,
+                        ugoira_threshold_offset=-0.1  # 动图阈值偏移，降低阈值使审核更严格
                     )
                     
                     self.progress.emit(f"[审核] 过滤标签: {', '.join(self.custom_tags)}")
+                    self.progress.emit(f"[审核] 动图阈值偏移: -0.1 (更严格，因画质较低可能误判)")
                     self.progress.emit("[审核] 步骤 3/3: 模型加载成功 ✓")
+                    
+                    # 获取图片目录
+                    safe_name = "".join(c for c in self.query if c.isalnum() or c in (' ', '-', '_', '。', '！', '？')).strip()
+                    if len(safe_name) > 50:
+                        safe_name = safe_name[:50]
+                    picture_dir = Path(self.download_folder) / safe_name / "picture"
+                    
+                    # 启动审核线程
+                    moderate_thread = threading.Thread(
+                        target=self.moderate_worker,
+                        args=(moderator, picture_dir),
+                        daemon=True
+                    )
+                    moderate_thread.start()
+                    self.progress.emit("[审核] 审核线程已启动，将实时审核下载的图片")
+                    
                 except Exception as e:
                     import traceback
                     error_detail = traceback.format_exc()
                     self.progress.emit(f"[审核] 错误详情: {error_detail}")
                     self.finished.emit(False, f"模型加载失败: {str(e)}")
                     return
+            
+            # 步骤 4: 启动多线程下载
+            self.progress.emit(f"[下载] 启动 {self.download_threads} 个下载线程...")
+            
+            download_threads = []
+            for i in range(self.download_threads):
+                t = threading.Thread(
+                    target=self.download_worker,
+                    args=(downloader, illust_list),
+                    daemon=True
+                )
+                t.start()
+                download_threads.append(t)
+            
+            # 步骤 5: 监控下载进度
+            while not self._is_stopped:
+                # 检查所有下载线程是否完成
+                all_done = all(not t.is_alive() for t in download_threads)
+                
+                if all_done:
+                    self.progress.emit(f"[下载] 所有下载线程已完成")
+                    break
+                
+                # 定期更新进度
+                self.msleep(1000)
                 
                 if self.check_pause():
                     self.finished.emit(False, "任务已停止")
                     return
+            
+            if self._is_stopped:
+                self.finished.emit(False, "任务已停止")
+                return
+            
+            self.progress.emit(f"[下载] 下载完成，成功下载 {self.downloaded_count} 个作品")
+            
+            # 步骤 6: 等待审核完成
+            if self.enable_moderate and moderate_thread:
+                self.progress.emit("[审核] 等待所有图片审核完成...")
                 
-                self.progress.emit("[审核] 模型加载完成，开始分析图片内容...")
-                self.progress.emit(f"[审核] 目标目录: {picture_dir}")
-                
-                # 循环：下载 -> 审核 -> 检查是否达到目标
-                total_downloaded = count
-                iteration = 1
-                max_iterations = 5  # 最多尝试5轮
-                
-                while iteration <= max_iterations:
-                    if self._is_stopped:
-                        self.finished.emit(False, "任务已停止")
-                        return
-                    
-                    self.progress.emit(f"[审核] 第 {iteration} 轮审核...")
-                    
-                    stats = moderator.process_directory(
-                        input_dir=str(picture_dir),
-                        delete_filtered=self.delete_filtered,
-                        verbose=False
-                    )
-                    
-                    if self._is_stopped:
-                        self.finished.emit(False, "任务已停止")
-                        return
-                    
-                    self.progress.emit(f"[审核] 第 {iteration} 轮完成: 保留 {stats['kept']}/{stats['total']} 张")
-                    
-                    # 检查是否达到目标
-                    if stats['kept'] >= self.max_count:
-                        self.progress.emit(f"[审核] 已达到目标数量 {self.max_count} 张，审核完成")
+                # 等待审核队列清空
+                while not self._is_stopped:
+                    if self.moderate_queue.empty() and self.moderated_count >= self.downloaded_count:
                         break
-                    
-                    # 如果还不够，计算需要继续下载多少
-                    needed = self.max_count - stats['kept']
-                    if stats['total'] > 0:
-                        filter_rate = stats['filtered'] / stats['total']
-                        # 根据过滤率估算需要下载的数量（加20%余量）
-                        additional = int(needed / (1 - filter_rate) * 1.2) if filter_rate < 1 else needed * 2
-                    else:
-                        additional = needed * 2
-                    
-                    self.progress.emit(f"[下载] 还需 {needed} 张，继续下载 {additional} 个作品...")
-                    
-                    if self.check_pause():
-                        self.finished.emit(False, "任务已停止")
-                        return
-                    
-                    # 继续下载
-                    additional_count = downloader.download_by_query(
-                        query=self.query,
-                        max_count=additional,
-                        skip_r18=self.skip_r18,
-                        skip_ai=self.skip_ai,
-                        min_bookmarks=self.min_bookmarks
-                    )
-                    
-                    if additional_count == 0:
-                        self.progress.emit("[下载] 没有更多符合条件的作品了")
-                        break
-                    
-                    total_downloaded += additional_count
-                    self.progress.emit(f"[下载] 本轮下载 {additional_count} 个作品，累计 {total_downloaded} 个")
-                    iteration += 1
+                    self.msleep(500)
                 
-                # 最终统计
+                if self._is_stopped:
+                    self.finished.emit(False, "任务已停止")
+                    return
+                
                 self.progress.emit("[审核] 所有审核完成")
-                self.progress.emit(f"[审核] 最终保留: {stats['kept']} 张图片")
-                self.progress.emit(f"[审核] 总计过滤: {stats['filtered']} 张图片")
+                self.progress.emit(f"[审核] 最终保留: {self.kept_count} 张图片")
+                self.progress.emit(f"[审核] 总计过滤: {self.filtered_count} 张图片")
                 
-                if stats['kept'] < self.max_count:
+                # 检查是否需要继续下载
+                if self.kept_count < self.max_count:
+                    needed = self.max_count - self.kept_count
+                    self.progress.emit(f"[提示] 还需 {needed} 张图片才能达到目标")
+                    self.progress.emit(f"[提示] 可以再次运行下载任务以获取更多图片")
+                    
                     result = (f"任务完成（未达到目标）\n\n"
                              f"目标数量: {self.max_count} 张\n"
-                             f"实际保留: {stats['kept']} 张\n"
-                             f"下载作品: {total_downloaded} 个\n"
-                             f"审核图片: {stats['total']} 张\n"
-                             f"过滤图片: {stats['filtered']} 张\n"
-                             f"过滤率: {stats['filtered']/stats['total']*100:.1f}%\n\n"
+                             f"实际保留: {self.kept_count} 张\n"
+                             f"下载作品: {self.downloaded_count} 个\n"
+                             f"审核图片: {self.moderated_count} 张\n"
+                             f"过滤图片: {self.filtered_count} 张\n"
+                             f"过滤率: {self.filtered_count/self.moderated_count*100:.1f}%\n\n"
                              f"提示: 可尝试降低筛选条件或更换关键词")
                 else:
                     result = (f"任务完成\n\n"
                              f"目标数量: {self.max_count} 张\n"
-                             f"实际保留: {stats['kept']} 张\n"
-                             f"下载作品: {total_downloaded} 个\n"
-                             f"审核图片: {stats['total']} 张\n"
-                             f"过滤图片: {stats['filtered']} 张\n"
-                             f"过滤率: {stats['filtered']/stats['total']*100:.1f}%")
+                             f"实际保留: {self.kept_count} 张\n"
+                             f"下载作品: {self.downloaded_count} 个\n"
+                             f"审核图片: {self.moderated_count} 张\n"
+                             f"过滤图片: {self.filtered_count} 张\n"
+                             f"过滤率: {self.filtered_count/self.moderated_count*100:.1f}%")
                 
                 self.finished.emit(True, result)
             else:
                 self.progress.emit("[完成] 所有任务已完成")
-                result = f"下载完成\n\n成功下载 {count} 个作品"
+                result = f"下载完成\n\n成功下载 {self.downloaded_count} 个作品"
                 self.finished.emit(True, result)
             
+            # 关闭日志文件并提示位置
+            if self.debug_log and self.log_file:
+                self.progress.emit(f"[日志] 调试日志已保存到: {self.log_file_path}")
+            self.close_log()
+            
         except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            self.progress.emit(f"[错误] {error_detail}")
+            self.close_log()  # 确保异常时也关闭日志
             self.finished.emit(False, f"操作失败: {str(e)}")
 
 
@@ -906,36 +1263,29 @@ class PixivDownloaderGUI(QMainWindow):
     
     def load_config(self):
         """从配置文件加载设置"""
+        # 先初始化默认值，确保属性存在
+        self.config = {}
+        self.theme_color = (255, 182, 193)
+        self.current_language = "zh_CN"
+        self.close_behavior = "ask"
+        
         try:
             config_path = "pixiv_downloader/config.json"
             if os.path.exists(config_path):
                 with open(config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
+                    self.config = json.load(f)
                     # 加载主题色
-                    if 'theme_color' in config:
-                        self.theme_color = tuple(config['theme_color'])
-                    else:
-                        self.theme_color = (255, 182, 193)  # 默认粉色
+                    if 'theme_color' in self.config:
+                        self.theme_color = tuple(self.config['theme_color'])
                     # 加载语言
-                    if 'language' in config:
-                        self.current_language = config['language']
-                    else:
-                        self.current_language = "zh_CN"
+                    if 'language' in self.config:
+                        self.current_language = self.config['language']
                     # 加载关闭行为
-                    if 'close_behavior' in config:
-                        self.close_behavior = config['close_behavior']
-                    else:
-                        self.close_behavior = "ask"  # 默认每次询问
-            else:
-                # 默认值
-                self.theme_color = (255, 182, 193)
-                self.current_language = "zh_CN"
-                self.close_behavior = "ask"
+                    if 'close_behavior' in self.config:
+                        self.close_behavior = self.config['close_behavior']
         except Exception as e:
             print(f"加载配置失败: {e}")
-            self.theme_color = (255, 182, 193)
-            self.current_language = "zh_CN"
-            self.close_behavior = "ask"
+            # 保持默认值
     
     def save_config(self):
         """保存设置到配置文件"""
@@ -955,6 +1305,9 @@ class PixivDownloaderGUI(QMainWindow):
             config['theme_color'] = list(self.theme_color)
             config['language'] = self.current_language
             config['close_behavior'] = self.close_behavior
+            
+            # 合并 self.config 中的其他设置（如 download_threads）
+            config.update(self.config)
             
             # 保存配置
             with open(config_path, 'w', encoding='utf-8') as f:
@@ -1094,6 +1447,9 @@ class PixivDownloaderGUI(QMainWindow):
         
         content_main_layout.addWidget(self.tabs)
         main_layout.addWidget(content_area)
+        
+        # 初始化过滤标签显示（从配置加载）
+        self.update_filter_tags_label()
         
         # 创建系统托盘图标
         self.create_tray_icon()
@@ -1580,10 +1936,27 @@ class PixivDownloaderGUI(QMainWindow):
         self.skip_r18_check.setStyleSheet("color: #666; background: transparent;")
         layout.addWidget(self.skip_r18_check)
         
-        # 去除 AI 作品
+        # AI和动图过滤选项（一行）
+        filter_layout = QHBoxLayout()
+        
         self.skip_ai_check = QCheckBox(self.tr("skip_ai", "去除 AI 作品"))
         self.skip_ai_check.setStyleSheet("color: #666; background: transparent;")
-        layout.addWidget(self.skip_ai_check)
+        
+        self.skip_ugoira_check = QCheckBox(self.tr("skip_ugoira", "跳过动图"))
+        self.skip_ugoira_check.setStyleSheet("color: #666; background: transparent;")
+        
+        self.only_ugoira_check = QCheckBox(self.tr("only_ugoira", "只下载动图"))
+        self.only_ugoira_check.setStyleSheet("color: #666; background: transparent;")
+        
+        # 互斥逻辑：选中一个时取消另一个
+        self.skip_ugoira_check.stateChanged.connect(lambda state: self.only_ugoira_check.setChecked(False) if state else None)
+        self.only_ugoira_check.stateChanged.connect(lambda state: self.skip_ugoira_check.setChecked(False) if state else None)
+        
+        filter_layout.addWidget(self.skip_ai_check)
+        filter_layout.addWidget(self.skip_ugoira_check)
+        filter_layout.addWidget(self.only_ugoira_check)
+        filter_layout.addStretch()
+        layout.addLayout(filter_layout)
         
         group.setLayout(layout)
         return group
@@ -1650,72 +2023,45 @@ class PixivDownloaderGUI(QMainWindow):
         self.delete_filtered_check.setStyleSheet("color: #666; background: transparent;")
         moderate_options_layout.addWidget(self.delete_filtered_check)
         
-        # 高级过滤选项
-        advanced_filter_check = QCheckBox(self.tr("advanced_filter", "高级过滤选项"))
-        advanced_filter_check.setStyleSheet("color: #666; background: transparent; font-weight: bold;")
-        advanced_filter_check.toggled.connect(self.toggle_advanced_filter)
-        moderate_options_layout.addWidget(advanced_filter_check)
+        # 高级过滤选项 - 改为按钮+文本显示
+        advanced_filter_layout = QHBoxLayout()
         
-        # 自定义标签容器
-        self.custom_tags_widget = QWidget()
-        custom_tags_layout = QVBoxLayout(self.custom_tags_widget)
-        custom_tags_layout.setContentsMargins(20, 5, 0, 0)
-        custom_tags_layout.setSpacing(8)
+        # 显示已选标签的文本框（只读）
+        self.selected_tags_label = QLabel(self.tr("default_tags", "默认: penis, sex"))
+        self.selected_tags_label.setStyleSheet("""
+            color: #666; 
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 182, 193, 0.5);
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 11px;
+        """)
+        self.selected_tags_label.setWordWrap(True)
         
-        tags_label = QLabel(self.tr("filter_tags", "过滤标签:"))
-        tags_label.setStyleSheet("color: #666; background: transparent; font-size: 12px;")
-        custom_tags_layout.addWidget(tags_label)
+        # 展开按钮
+        self.advanced_filter_btn = QPushButton(self.tr("advanced_filter", "高级过滤选项"))
+        self.advanced_filter_btn.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 182, 193, 0.8);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 5px 15px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: rgba(255, 182, 193, 1);
+            }
+        """)
+        self.advanced_filter_btn.clicked.connect(self.show_advanced_filter_dialog)
         
-        # 创建标签复选框网格
-        tags_grid = QGridLayout()
-        tags_grid.setSpacing(8)
+        advanced_filter_layout.addWidget(QLabel(self.tr("filter_tags", "过滤标签:")))
+        advanced_filter_layout.addWidget(self.selected_tags_label, 1)
+        advanced_filter_layout.addWidget(self.advanced_filter_btn)
+        moderate_options_layout.addLayout(advanced_filter_layout)
         
-        # 定义常用的NSFW标签（按严重程度分类）
+        # 初始化标签复选框字典（用于对话框）
         self.filter_tag_checkboxes = {}
-        nsfw_tags = [
-            # 第一行：默认选中（最严重）
-            ("penis", "男性生殖器", True),
-            ("sex", "性交", True),
-            ("vaginal", "阴道性交", False),
-            ("anal", "肛交", False),
-            # 第二行：口交相关
-            ("fellatio", "口交(男)", False),
-            ("cunnilingus", "口交(女)", False),
-            ("pussy", "女性生殖器", False),
-            ("nude", "裸体", False),
-            # 第三行：其他性行为
-            ("masturbation", "自慰", False),
-            ("cum", "精液", False),
-            ("orgasm", "高潮", False),
-            ("ejaculation", "射精", False),
-            # 第四行：身体部位
-            ("nipples", "乳头", False),
-            ("pussy_juice", "爱液", False),
-            ("sex_from_behind", "后入", False),
-            ("female_ejaculation", "潮吹", False),
-        ]
-        
-        row = 0
-        col = 0
-        for tag, label, checked in nsfw_tags:
-            checkbox = QCheckBox(f"{label} ({tag})")
-            checkbox.setChecked(checked)
-            checkbox.setStyleSheet("color: #666; background: transparent; font-size: 11px;")
-            self.filter_tag_checkboxes[tag] = checkbox
-            tags_grid.addWidget(checkbox, row, col)
-            col += 1
-            if col >= 4:  # 每行4个
-                col = 0
-                row += 1
-        
-        custom_tags_layout.addLayout(tags_grid)
-        
-        default_hint = QLabel(self.tr("default_tags", "默认: penis, sex"))
-        default_hint.setStyleSheet("color: #999; background: transparent; font-size: 11px;")
-        custom_tags_layout.addWidget(default_hint)
-        
-        self.custom_tags_widget.setVisible(False)  # 默认隐藏
-        moderate_options_layout.addWidget(self.custom_tags_widget)
         
         layout.addWidget(self.moderate_options)
         
@@ -1864,6 +2210,66 @@ class PixivDownloaderGUI(QMainWindow):
         close_layout.addStretch()
         layout.addLayout(close_layout)
         
+        # 下载线程数设置
+        threads_layout = QHBoxLayout()
+        threads_label = QLabel(self.tr("download_threads", "下载线程数:"))
+        threads_label.setFixedWidth(80)
+        threads_label.setStyleSheet("color: #666; background: transparent; font-weight: bold;")
+        
+        self.download_threads_spin = QSpinBox()
+        self.download_threads_spin.setRange(1, 10)
+        self.download_threads_spin.setValue(self.config.get('download_threads', 3))
+        self.download_threads_spin.setFixedWidth(80)
+        self.download_threads_spin.setFixedHeight(40)
+        self.download_threads_spin.valueChanged.connect(self.on_download_threads_changed)
+        
+        threads_hint = QLabel(self.tr("download_threads_hint", "同时下载的作品数量（1-10）"))
+        threads_hint.setStyleSheet("color: #999; background: transparent; font-size: 11px;")
+        
+        threads_layout.addWidget(threads_label)
+        threads_layout.addWidget(self.download_threads_spin)
+        threads_layout.addWidget(threads_hint)
+        threads_layout.addStretch()
+        layout.addLayout(threads_layout)
+        
+        # Ugoira 转换格式设置
+        ugoira_layout = QHBoxLayout()
+        ugoira_label = QLabel(self.tr("ugoira_format", "动图格式:"))
+        ugoira_label.setFixedWidth(80)
+        ugoira_label.setStyleSheet("color: #666; background: transparent; font-weight: bold;")
+        
+        self.ugoira_format_combo = QComboBox()
+        self.ugoira_format_combo.addItems(["GIF", "MP4"])
+        current_format = self.config.get('ugoira_format', 'gif').upper()
+        self.ugoira_format_combo.setCurrentText(current_format)
+        self.ugoira_format_combo.setFixedWidth(80)
+        self.ugoira_format_combo.setFixedHeight(40)
+        self.ugoira_format_combo.currentTextChanged.connect(self.on_ugoira_format_changed)
+        
+        ugoira_hint = QLabel(self.tr("ugoira_format_hint", "动图自动转换格式"))
+        ugoira_hint.setStyleSheet("color: #999; background: transparent; font-size: 11px;")
+        
+        ugoira_layout.addWidget(ugoira_label)
+        ugoira_layout.addWidget(self.ugoira_format_combo)
+        ugoira_layout.addWidget(ugoira_hint)
+        ugoira_layout.addStretch()
+        layout.addLayout(ugoira_layout)
+        
+        # 调试日志开关
+        debug_layout = QHBoxLayout()
+        self.debug_log_check = QCheckBox(self.tr("enable_debug_log", "启用调试日志"))
+        self.debug_log_check.setChecked(self.config.get('debug_log', False))
+        self.debug_log_check.setStyleSheet("color: #666; background: transparent; font-weight: bold;")
+        self.debug_log_check.stateChanged.connect(self.on_debug_log_changed)
+        
+        debug_hint = QLabel(self.tr("debug_log_hint", "记录详细的审核过程和数值"))
+        debug_hint.setStyleSheet("color: #999; background: transparent; font-size: 11px;")
+        
+        debug_layout.addWidget(self.debug_log_check)
+        debug_layout.addWidget(debug_hint)
+        debug_layout.addStretch()
+        layout.addLayout(debug_layout)
+        
         # 目录设置
         folder_layout = QHBoxLayout()
         folder_label = QLabel(self.tr("download_dir", "下载目录:"))
@@ -1967,9 +2373,142 @@ class PixivDownloaderGUI(QMainWindow):
         self.keyword_label.setVisible(checked)
         self.keyword_input.setVisible(checked)
     
-    def toggle_advanced_filter(self, checked):
-        """切换高级过滤选项的可见性"""
-        self.custom_tags_widget.setVisible(checked)
+    def show_advanced_filter_dialog(self):
+        """显示高级过滤选项对话框"""
+        from PyQt6.QtWidgets import QDialog, QDialogButtonBox
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr("advanced_filter", "高级过滤选项"))
+        dialog.setModal(True)
+        dialog.setMinimumWidth(500)
+        dialog.setStyleSheet("""
+            QDialog {
+                background: white;
+            }
+        """)
+        
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(15)
+        
+        # 说明文字
+        hint_label = QLabel(self.tr("custom_tags_hint", "选择需要过滤的NSFW标签"))
+        hint_label.setStyleSheet("color: #666; font-size: 12px; padding: 5px;")
+        layout.addWidget(hint_label)
+        
+        # 创建标签复选框网格
+        tags_grid = QGridLayout()
+        tags_grid.setSpacing(10)
+        
+        # 定义常用的NSFW标签（按严重程度分类）
+        nsfw_tags = [
+            # 第一行：默认选中（最严重）
+            ("penis", "男性生殖器"),
+            ("sex", "性交"),
+            ("vaginal", "阴道性交"),
+            ("anal", "肛交"),
+            # 第二行：口交相关
+            ("fellatio", "口交(男)"),
+            ("cunnilingus", "口交(女)"),
+            ("pussy", "女性生殖器"),
+            ("nude", "裸体"),
+            # 第三行：其他性行为
+            ("masturbation", "自慰"),
+            ("cum", "精液"),
+            ("orgasm", "高潮"),
+            ("ejaculation", "射精"),
+            # 第四行：身体部位
+            ("nipples", "乳头"),
+            ("pussy_juice", "爱液"),
+            ("sex_from_behind", "后入"),
+            ("female_ejaculation", "潮吹"),
+        ]
+        
+        # 从配置加载历史选择
+        saved_tags = self.config.get('filter_tags', ['penis', 'sex'])
+        
+        # 清空并重新创建复选框
+        self.filter_tag_checkboxes = {}
+        
+        row = 0
+        col = 0
+        for tag, label in nsfw_tags:
+            checkbox = QCheckBox(f"{label} ({tag})")
+            # 根据配置设置选中状态
+            checkbox.setChecked(tag in saved_tags)
+            checkbox.setStyleSheet("""
+                QCheckBox {
+                    color: #666;
+                    font-size: 12px;
+                    padding: 5px;
+                }
+                QCheckBox::indicator {
+                    width: 18px;
+                    height: 18px;
+                }
+            """)
+            self.filter_tag_checkboxes[tag] = checkbox
+            tags_grid.addWidget(checkbox, row, col)
+            col += 1
+            if col >= 2:  # 每行2个，更宽松
+                col = 0
+                row += 1
+        
+        layout.addLayout(tags_grid)
+        
+        # 按钮
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(lambda: self.apply_filter_tags(dialog))
+        button_box.rejected.connect(dialog.reject)
+        button_box.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 182, 193, 0.8);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 8px 20px;
+                font-weight: bold;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background: rgba(255, 182, 193, 1);
+            }
+        """)
+        layout.addWidget(button_box)
+        
+        dialog.exec()
+    
+    def apply_filter_tags(self, dialog):
+        """应用过滤标签选择"""
+        # 获取选中的标签
+        selected_tags = [tag for tag, checkbox in self.filter_tag_checkboxes.items() if checkbox.isChecked()]
+        
+        # 更新显示
+        self.update_filter_tags_label(selected_tags)
+        
+        # 保存到配置
+        self.config['filter_tags'] = selected_tags
+        self.save_config()
+        
+        # 日志确认
+        self.log_text.append(f"✓ 过滤标签已保存: {', '.join(selected_tags) if selected_tags else '无'}")
+        
+        dialog.accept()
+    
+    def update_filter_tags_label(self, tags=None):
+        """更新过滤标签显示
+        
+        Args:
+            tags: 标签列表，如果为None则从配置读取
+        """
+        if tags is None:
+            tags = self.config.get('filter_tags', ['penis', 'sex'])
+        
+        if tags:
+            self.selected_tags_label.setText(f"已选: {', '.join(tags)}")
+        else:
+            self.selected_tags_label.setText("未选择任何标签")
     
     def apply_styles(self):
         """应用全局样式 - 支持自定义RGB颜色"""
@@ -2305,7 +2844,11 @@ class PixivDownloaderGUI(QMainWindow):
             delete_filtered=self.delete_filtered_check.isChecked(),
             download_folder=str(self.get_download_folder()),
             download_mode=download_mode,
-            custom_tags=custom_tags
+            custom_tags=custom_tags,
+            download_threads=self.config.get('download_threads', 3),
+            skip_ugoira=self.skip_ugoira_check.isChecked(),
+            only_ugoira=self.only_ugoira_check.isChecked(),
+            debug_log=self.config.get('debug_log', False)
         )
         self.work_thread.progress.connect(self.on_progress)
         self.work_thread.finished.connect(self.on_finished)
@@ -2788,6 +3331,21 @@ class PixivDownloaderGUI(QMainWindow):
                 self.tr("success", "成功"),
                 self.tr("close_behavior_changed", "关闭行为已更改")
             )
+    
+    def on_download_threads_changed(self, value):
+        """下载线程数改变时触发"""
+        self.config['download_threads'] = value
+        self.save_config()
+    
+    def on_ugoira_format_changed(self, value):
+        """动图格式改变时触发"""
+        self.config['ugoira_format'] = value.lower()
+        self.save_config()
+    
+    def on_debug_log_changed(self, state):
+        """调试日志开关改变时触发"""
+        self.config['debug_log'] = bool(state)
+        self.save_config()
     
     def restart_application(self):
         """重启应用"""

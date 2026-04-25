@@ -2,7 +2,7 @@
 ; https://jrsoftware.org/isinfo.php
 
 #define MyAppName "WhiteJade"
-#define MyAppVersion "2.2.1"
+#define MyAppVersion "2.3.0"
 #define MyAppPublisher "cll Project"
 #define MyAppURL "https://github.com/mamajunya/WhiteJade"
 #define MyAppExeName "WhiteJade.exe"
