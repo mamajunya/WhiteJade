@@ -279,7 +279,8 @@ class PixivDownloader:
                 user_id = user_info.user.id
             
             print(f"正在获取用户 {user_id} 的收藏夹...")
-            json_result = self.api.user_bookmarks_illust(user_id, restrict=restrict, offset=offset)
+            # pixivpy3 的 user_bookmarks_illust 不支持 offset 参数
+            json_result = self.api.user_bookmarks_illust(user_id, restrict=restrict)
             
             if not json_result or 'illusts' not in json_result:
                 print("未找到收藏作品")
